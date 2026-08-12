@@ -15,6 +15,7 @@ import {
   Sliders
 } from 'lucide-react';
 import { Homework } from '../types';
+import { FormattedDescription } from './FormattedDescription';
 
 interface HomeworkCardProps {
   homework: Homework;
@@ -35,25 +36,35 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 }) => {
   const [showProgressSlider, setShowProgressSlider] = useState(false);
 
-  // Compute status and days remaining
+  // Compute due date status and days remaining
+  const hasNoDueDate = !homework.dueDate || homework.dueDate === 'ไม่มีกำหนดส่ง' || homework.dueDate === 'no_due_date';
+  const hasNoDueTime = !homework.dueTime || homework.dueTime === 'ไม่มีเวลากำหนด' || homework.dueTime === 'none';
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const due = new Date(homework.dueDate);
-  due.setHours(0, 0, 0, 0);
+  let isOverdue = false;
+  let isDueToday = false;
+  let diffDays = 0;
+  let formattedDueDate = 'ยังไม่มีกำหนดส่ง';
 
-  const diffTime = due.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (!hasNoDueDate) {
+    const due = new Date(homework.dueDate);
+    if (!isNaN(due.getTime())) {
+      due.setHours(0, 0, 0, 0);
+      const diffTime = due.getTime() - today.getTime();
+      diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  const isOverdue = !homework.completed && homework.progress < 100 && diffDays < 0;
-  const isDueToday = !homework.completed && diffDays === 0;
+      isOverdue = !homework.completed && homework.progress < 100 && diffDays < 0;
+      isDueToday = !homework.completed && diffDays === 0;
 
-  // Due date badge formatting
-  const formattedDueDate = new Date(homework.dueDate).toLocaleDateString('th-TH', {
-    day: 'numeric',
-    month: 'short',
-    year: '2-digit',
-  });
+      formattedDueDate = due.toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short',
+        year: '2-digit',
+      });
+    }
+  }
 
   return (
     <div 
@@ -97,11 +108,13 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
               )}
             </span>
 
-            {/* Assignment Type */}
-            <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200/70 px-2 py-0.5 rounded-full flex items-center space-x-1">
-              <Tag className="w-3 h-3 text-slate-400" />
-              <span>{homework.type}</span>
-            </span>
+            {/* Assignment Type if provided */}
+            {homework.type && (
+              <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200/70 px-2 py-0.5 rounded-full flex items-center space-x-1">
+                <Tag className="w-3 h-3 text-slate-400" />
+                <span>{homework.type}</span>
+              </span>
+            )}
 
             {/* Priority Badge */}
             {homework.priority === 'ด่วนที่สุด' && (
@@ -128,17 +141,24 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
           </button>
         </div>
 
-        {/* Task Title & Details Preview */}
-        <h3 className="text-slate-800 text-sm sm:text-base font-semibold leading-relaxed mb-3">
-          {homework.description}
-        </h3>
+        {/* Task Title & Details */}
+        <div className="mb-3">
+          {homework.title && (
+            <h3 className="text-slate-900 text-sm sm:text-base font-bold font-heading leading-snug mb-1">
+              {homework.title}
+            </h3>
+          )}
+          <FormattedDescription text={homework.description} className="text-xs sm:text-sm" />
+        </div>
 
         {/* Due Date & Countdown Status */}
         <div className="flex flex-wrap items-center justify-between gap-2 py-2.5 px-3 bg-slate-50/80 rounded-xl border border-slate-100 text-xs">
           <div className="flex items-center space-x-1.5 text-slate-600">
-            <Calendar className="w-3.5 h-3.5 text-sky-600" />
-            <span>กำหนดส่ง: <strong className="text-slate-800 font-medium">{formattedDueDate}</strong></span>
-            {homework.dueTime && (
+            <Calendar className="w-3.5 h-3.5 text-sky-600 flex-shrink-0" />
+            <span>
+              กำหนดส่ง: <strong className="text-slate-800 font-medium">{formattedDueDate}</strong>
+            </span>
+            {!hasNoDueTime && homework.dueTime && (
               <span className="text-slate-400">({homework.dueTime} น.)</span>
             )}
           </div>
@@ -148,6 +168,11 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
               <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100/80 text-emerald-800">
                 <Sparkles className="w-3 h-3 text-emerald-600" />
                 <span>เสร็จสมบูรณ์แล้ว</span>
+              </span>
+            ) : hasNoDueDate ? (
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                <Clock className="w-3 h-3 text-slate-400" />
+                <span>ยังไม่มีกำหนดส่ง</span>
               </span>
             ) : isOverdue ? (
               <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100/80 text-rose-800">

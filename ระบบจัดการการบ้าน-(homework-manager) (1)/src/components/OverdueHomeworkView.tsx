@@ -47,7 +47,6 @@ export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
     }
 
     if (filters.subject && hw.subject !== filters.subject) return false;
-    if (filters.type && hw.type !== filters.type) return false;
     if (filters.workType !== 'all' && hw.workType !== filters.workType) return false;
 
     return true;

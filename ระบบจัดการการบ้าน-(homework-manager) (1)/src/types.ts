@@ -26,12 +26,13 @@ export type Priority = 'ปกติ' | 'สำคัญ' | 'ด่วนที�
 
 export interface Homework {
   id: string;
-  subject: string;           // วิชา
-  dueDate: string;           // วันกำหนดส่ง (YYYY-MM-DD or ISO string)
+  subject: string;           // วิชา (กรอกเอง)
+  title?: string;            // หัวข้องาน (กรอกเอง)
+  dueDate: string;           // วันกำหนดส่ง (YYYY-MM-DD or 'ไม่มีกำหนดส่ง')
   dueTime?: string;          // เวลาที่ต้องส่ง e.g., "23:59"
-  type: HomeworkType;        // ประเภทงาน
+  type?: HomeworkType;       // ประเภทงาน (Optional)
   workType: WorkType;        // งานกลุ่ม หรือ งานเดี่ยว
-  description: string;       // รายละเอียดของงาน
+  description: string;       // รายละเอียดของงาน (รองรับ Bullet)
   progress: number;          // ความคืบหน้า (0 - 100%)
   completed: boolean;        // เสร็จสมบูรณ์แล้วหรือไม่
   completedAt?: string;      // วันเวลาที่ทำเสร็จ

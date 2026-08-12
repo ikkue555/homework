@@ -4,7 +4,6 @@ import {
   BookOpen, 
   Calendar, 
   Clock, 
-  Tag, 
   Users, 
   User, 
   FileText, 
@@ -13,10 +12,14 @@ import {
   Save,
   X,
   Plus,
-  Trash2
+  Trash2,
+  List,
+  Heading,
+  ListOrdered,
+  CheckSquare
 } from 'lucide-react';
-import { Homework, HomeworkType, WorkType, Priority } from '../types';
-import { SUBJECT_PRESETS } from '../data/mockData';
+import { Homework, WorkType, Priority } from '../types';
+import { FormattedDescription } from './FormattedDescription';
 
 interface AddHomeworkFormProps {
   onSave: (homework: Omit<Homework, 'id' | 'createdAt'>, existingId?: string) => void;
@@ -24,26 +27,18 @@ interface AddHomeworkFormProps {
   editingHomework?: Homework | null;
 }
 
-const HOMEWORK_TYPES: HomeworkType[] = [
-  'แบบฝึกหัด/ใบงาน',
-  'รายงาน',
-  'งานนำเสนอ/พรีเซนต์',
-  'โครงงาน/โปรเจกต์',
-  'การบ้านทั่วไป',
-  'เตรียมสอบ/ทบทวน',
-  'อื่นๆ',
-];
-
 export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
   onSave,
   onCancel,
   editingHomework,
 }) => {
   const [subject, setSubject] = useState('');
-  const [customSubject, setCustomSubject] = useState('');
+  const [title, setTitle] = useState('');
+  const [hasNoDueDate, setHasNoDueDate] = useState(false);
   const [dueDate, setDueDate] = useState('');
+  const [hasNoDueTime, setHasNoDueTime] = useState(false);
   const [dueTime, setDueTime] = useState('23:59');
-  const [type, setType] = useState<HomeworkType>('แบบฝึกหัด/ใบงาน');
+  
   const [workType, setWorkType] = useState<WorkType>('เดี่ยว');
   const [description, setDescription] = useState('');
   const [progress, setProgress] = useState(0);
@@ -55,27 +50,38 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
   // Populate form if editing
   useEffect(() => {
     if (editingHomework) {
-      if (SUBJECT_PRESETS.includes(editingHomework.subject)) {
-        setSubject(editingHomework.subject);
-        setCustomSubject('');
+      setSubject(editingHomework.subject || '');
+      setTitle(editingHomework.title || '');
+
+      if (!editingHomework.dueDate || editingHomework.dueDate === 'ไม่มีกำหนดส่ง' || editingHomework.dueDate === 'no_due_date') {
+        setHasNoDueDate(true);
+        setDueDate('');
       } else {
-        setSubject('อื่นๆ');
-        setCustomSubject(editingHomework.subject);
+        setHasNoDueDate(false);
+        setDueDate(editingHomework.dueDate);
       }
-      setDueDate(editingHomework.dueDate);
-      setDueTime(editingHomework.dueTime || '23:59');
-      setType(editingHomework.type);
-      setWorkType(editingHomework.workType);
-      setDescription(editingHomework.description);
-      setProgress(editingHomework.progress);
-      setPriority(editingHomework.priority);
+
+      if (!editingHomework.dueTime || editingHomework.dueTime === 'ไม่มีเวลากำหนด' || editingHomework.dueTime === 'none') {
+        setHasNoDueTime(true);
+        setDueTime('');
+      } else {
+        setHasNoDueTime(false);
+        setDueTime(editingHomework.dueTime || '23:59');
+      }
+
+      setWorkType(editingHomework.workType || 'เดี่ยว');
+      setDescription(editingHomework.description || '');
+      setProgress(editingHomework.progress || 0);
+      setPriority(editingHomework.priority || 'ปกติ');
       setMembers(editingHomework.members && editingHomework.members.length > 0 ? editingHomework.members : ['']);
     } else {
       // Set default due date to tomorrow
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setDueDate(tomorrow.toISOString().split('T')[0]);
-      setSubject(SUBJECT_PRESETS[0]);
+      setHasNoDueDate(false);
+      setHasNoDueTime(false);
+      setDueTime('23:59');
     }
   }, [editingHomework]);
 
@@ -95,18 +101,25 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
     });
   };
 
+  const handleInsertBullet = (prefix: string) => {
+    setDescription(prev => {
+      if (!prev) return `${prefix} `;
+      if (prev.endsWith('\n')) return `${prev}${prefix} `;
+      return `${prev}\n${prefix} `;
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const finalSubject = subject === 'อื่นๆ' ? customSubject.trim() : subject.trim();
-
+    const finalSubject = subject.trim();
     if (!finalSubject) {
-      alert('กรุณาระบุชื่อวิชา');
+      alert('กรุณากรอกชื่อวิชา');
       return;
     }
 
-    if (!dueDate) {
-      alert('กรุณาเลือกวันกำหนดส่ง');
+    if (!hasNoDueDate && !dueDate) {
+      alert('กรุณาเลือกวันกำหนดส่ง หรือเลือก "ยังไม่มีกำหนดส่ง"');
       return;
     }
 
@@ -114,6 +127,9 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
       alert('กรุณากรอกรายละเอียดของงาน');
       return;
     }
+
+    const finalDueDate = hasNoDueDate ? 'ไม่มีกำหนดส่ง' : dueDate;
+    const finalDueTime = (hasNoDueDate || hasNoDueTime) ? 'ไม่มีเวลากำหนด' : dueTime;
 
     const filteredMembers = workType === 'กลุ่ม' 
       ? members.map(m => m.trim()).filter(Boolean)
@@ -124,9 +140,9 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
     onSave(
       {
         subject: finalSubject,
-        dueDate,
-        dueTime,
-        type,
+        title: title.trim() || undefined,
+        dueDate: finalDueDate,
+        dueTime: finalDueTime,
         workType,
         description: description.trim(),
         progress,
@@ -151,7 +167,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
               {editingHomework ? 'แก้ไขข้อมูลการบ้าน' : 'เพิ่มการบ้านใหม่'}
             </h2>
             <p className="text-xs text-slate-500">
-              กรอกข้อมูลการบ้าน วิชา กำหนดส่ง และประเภทงานเพื่อให้ระบบช่วยติดตาม
+              กรอกข้อมูลวิชา หัวข้องาน รายละเอียด และกำหนดส่งการบ้าน
             </p>
           </div>
         </div>
@@ -167,100 +183,127 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Subject (วิชา) */}
+        {/* Subject (วิชา - กรอกเองเท่านั้น) */}
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
             <BookOpen className="w-4 h-4 text-sky-600" />
             <span>วิชา <span className="text-rose-500">*</span></span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <select
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-            >
-              {SUBJECT_PRESETS.map((sub) => (
-                <option key={sub} value={sub}>{sub}</option>
-              ))}
-              <option value="อื่นๆ">➕ วิชาอื่นๆ (กรอกเอง)</option>
-            </select>
-
-            {subject === 'อื่นๆ' && (
-              <input
-                type="text"
-                placeholder="พิมพ์ชื่อวิชา..."
-                value={customSubject}
-                onChange={(e) => setCustomSubject(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-                required
-              />
-            )}
-          </div>
+          <input
+            type="text"
+            placeholder="กรอกชื่อวิชา (เช่น คณิตศาสตร์, ภาษาไทย, ฟิสิกส์)..."
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+            required
+          />
         </div>
 
-        {/* Due Date & Time (วันกำหนดส่ง) */}
+        {/* Title (หัวข้องาน - กรอกเอง) */}
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
+            <Heading className="w-4 h-4 text-sky-600" />
+            <span>หัวข้องาน / ชื่อการบ้าน (กรอกเอง)</span>
+          </label>
+          <input
+            type="text"
+            placeholder="กรอกหัวข้องาน (เช่น ใบงานที่ 3 เรื่องสมการเคมี, รายงานกลุ่ม)..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+          />
+        </div>
+
+        {/* Due Date & Time (วันกำหนดส่ง & เวลากำหนดส่ง) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
-              <Calendar className="w-4 h-4 text-sky-600" />
-              <span>วันกำหนดส่ง <span className="text-rose-500">*</span></span>
-            </label>
+          {/* Due Date */}
+          <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                <Calendar className="w-4 h-4 text-sky-600" />
+                <span>วันกำหนดส่ง</span>
+              </label>
+
+              <label className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 cursor-pointer hover:text-sky-700">
+                <input
+                  type="checkbox"
+                  checked={hasNoDueDate}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setHasNoDueDate(checked);
+                    if (checked) {
+                      setHasNoDueTime(true);
+                    }
+                  }}
+                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                />
+                <span>ยังไม่มีกำหนดส่ง</span>
+              </label>
+            </div>
+
             <input
               type="date"
               value={dueDate}
+              disabled={hasNoDueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-              required
+              className={`w-full text-sm rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 ${
+                hasNoDueDate 
+                  ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'
+                  : 'bg-white border border-slate-200 text-slate-800 focus:border-sky-500'
+              }`}
+              required={!hasNoDueDate}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
-              <Clock className="w-4 h-4 text-sky-600" />
-              <span>เวลากำหนดส่ง</span>
-            </label>
+          {/* Due Time */}
+          <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                <Clock className="w-4 h-4 text-sky-600" />
+                <span>เวลากำหนดส่ง</span>
+              </label>
+
+              <label className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 cursor-pointer hover:text-sky-700">
+                <input
+                  type="checkbox"
+                  checked={hasNoDueTime || hasNoDueDate}
+                  disabled={hasNoDueDate}
+                  onChange={(e) => setHasNoDueTime(e.target.checked)}
+                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                />
+                <span>ไม่มีเวลากำหนด</span>
+              </label>
+            </div>
+
             <input
               type="time"
               value={dueTime}
+              disabled={hasNoDueTime || hasNoDueDate}
               onChange={(e) => setDueTime(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+              className={`w-full text-sm rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 ${
+                (hasNoDueTime || hasNoDueDate)
+                  ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'
+                  : 'bg-white border border-slate-200 text-slate-800 focus:border-sky-500'
+              }`}
             />
           </div>
         </div>
 
-        {/* Assignment Type & Priority */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
-              <Tag className="w-4 h-4 text-sky-600" />
-              <span>ประเภทงาน</span>
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as HomeworkType)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-            >
-              {HOMEWORK_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
-              <AlertCircle className="w-4 h-4 text-sky-600" />
-              <span>ระดับความสำคัญ</span>
-            </label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as Priority)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-            >
-              <option value="ปกติ">🟢 ปกติ</option>
-              <option value="สำคัญ">🟡 สำคัญ</option>
-              <option value="ด่วนที่สุด">🔴 ด่วนที่สุด</option>
-            </select>
-          </div>
+        {/* Priority */}
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
+            <AlertCircle className="w-4 h-4 text-sky-600" />
+            <span>ระดับความสำคัญ</span>
+          </label>
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as Priority)}
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+          >
+            <option value="ปกติ">🟢 ปกติ</option>
+            <option value="สำคัญ">🟡 สำคัญ</option>
+            <option value="ด่วนที่สุด">🔴 ด่วนที่สุด</option>
+          </select>
         </div>
 
         {/* Work Mode (งานกลุ่ม หรือ งานเดี่ยว) */}
@@ -338,20 +381,71 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
           </div>
         )}
 
-        {/* Description (รายละเอียดของงาน) */}
+        {/* Description (รายละเอียดของงาน - Bullet / ข้อๆ) */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
-            <FileText className="w-4 h-4 text-sky-600" />
-            <span>รายละเอียดของงาน <span className="text-rose-500">*</span></span>
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-semibold text-slate-700 flex items-center space-x-1.5">
+              <FileText className="w-4 h-4 text-sky-600" />
+              <span>รายละเอียดของงาน <span className="text-rose-500">*</span></span>
+            </label>
+
+            {/* Quick Bullet Formatting Toolbar */}
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => handleInsertBullet('•')}
+                className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors flex items-center space-x-1 cursor-pointer"
+                title="แทรกหัวข้อสัญลักษณ์จุด (Bullet)"
+              >
+                <List className="w-3.5 h-3.5" />
+                <span>+ ข้อ •</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleInsertBullet('1.')}
+                className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors flex items-center space-x-1 cursor-pointer"
+                title="แทรกหัวข้อตัวเลข (1., 2.)"
+              >
+                <ListOrdered className="w-3.5 h-3.5" />
+                <span>+ ข้อ 1.</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleInsertBullet('[ ]')}
+                className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors flex items-center space-x-1 cursor-pointer"
+                title="แทรกช่องติ๊กรายการ"
+              >
+                <CheckSquare className="w-3.5 h-3.5" />
+                <span>+ ติ๊ก [ ]</span>
+              </button>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-500 mb-2">
+            สามารถพิมพ์เป็นความเรียง หรือกดปุ่มด้านขวาบนเพื่อใส่หัวข้อเป็นข้อๆ (Bullet) ได้ตามต้องการ
+          </p>
+
           <textarea
-            rows={4}
-            placeholder="อธิบายรายละเอียดการบ้าน ข้อที่ต้องทำ หน้าของหนังสือ ลิ้งก์อ้างอิง หรือคำสั่งครู..."
+            rows={5}
+            placeholder={`อธิบายรายละเอียดการบ้าน...
+• ทำแบบฝึกหัดข้อ 1-5
+• หน้า 42 ในหนังสือเรียน
+• สรุปสูตรใส่กระดาษ A4`}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-2xl p-3.5 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-2xl p-3.5 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 font-sans"
             required
           />
+
+          {/* Live Preview Box if there is description */}
+          {description.trim() && (
+            <div className="mt-3 p-3.5 bg-slate-50/90 rounded-2xl border border-sky-100 text-xs">
+              <span className="text-[10px] font-bold text-sky-700 uppercase tracking-wider block mb-1.5">
+                👁️ ตัวอย่างการแสดงผลแบบรายการ (Bullet Preview):
+              </span>
+              <FormattedDescription text={description} className="text-xs" />
+            </div>
+          )}
         </div>
 
         {/* Initial Progress Slider */}

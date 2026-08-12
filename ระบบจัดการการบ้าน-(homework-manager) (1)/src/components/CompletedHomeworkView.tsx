@@ -49,9 +49,6 @@ export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
     // Subject
     if (filters.subject && hw.subject !== filters.subject) return false;
 
-    // Type
-    if (filters.type && hw.type !== filters.type) return false;
-
     // WorkType
     if (filters.workType !== 'all' && hw.workType !== filters.workType) return false;
 

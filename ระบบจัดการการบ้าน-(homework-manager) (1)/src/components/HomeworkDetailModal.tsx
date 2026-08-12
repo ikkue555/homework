@@ -15,6 +15,7 @@ import {
   FileText
 } from 'lucide-react';
 import { Homework } from '../types';
+import { FormattedDescription } from './FormattedDescription';
 
 interface HomeworkDetailModalProps {
   homework: Homework | null;
@@ -35,12 +36,21 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
 }) => {
   if (!homework) return null;
 
-  const formattedDueDate = new Date(homework.dueDate).toLocaleDateString('th-TH', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const hasNoDueDate = !homework.dueDate || homework.dueDate === 'ไม่มีกำหนดส่ง' || homework.dueDate === 'no_due_date';
+  const hasNoDueTime = !homework.dueTime || homework.dueTime === 'ไม่มีเวลากำหนด' || homework.dueTime === 'none';
+
+  let formattedDueDate = 'ยังไม่มีกำหนดส่ง';
+  if (!hasNoDueDate) {
+    const due = new Date(homework.dueDate);
+    if (!isNaN(due.getTime())) {
+      formattedDueDate = due.toLocaleDateString('th-TH', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn">
@@ -57,9 +67,11 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
           <span className="text-xs font-bold px-3 py-1 rounded-xl bg-sky-100 text-sky-800 font-heading">
             {homework.subject}
           </span>
-          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-            {homework.type}
-          </span>
+          {homework.type && (
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+              {homework.type}
+            </span>
+          )}
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
             {homework.workType === 'กลุ่ม' ? `👥 งานกลุ่ม (${homework.members?.length || 0} คน)` : '👤 งานเดี่ยว'}
           </span>
@@ -70,10 +82,20 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
           )}
         </div>
 
-        {/* Description Title */}
-        <h3 className="text-xl font-bold font-heading text-slate-800 mb-4 leading-snug">
-          {homework.description}
-        </h3>
+        {/* Title if present */}
+        {homework.title && (
+          <h3 className="text-lg sm:text-xl font-bold font-heading text-slate-900 mb-2 leading-snug">
+            {homework.title}
+          </h3>
+        )}
+
+        {/* Formatted Description */}
+        <div className="mb-5 bg-slate-50/60 p-4 rounded-2xl border border-slate-100">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+            รายละเอียดงาน:
+          </span>
+          <FormattedDescription text={homework.description} className="text-sm" />
+        </div>
 
         {/* Info Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5 p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
@@ -89,7 +111,9 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
             <Clock className="w-4 h-4 text-sky-600 flex-shrink-0" />
             <div>
               <span className="text-slate-400 block text-[10px]">เวลากำหนดส่ง:</span>
-              <strong className="text-slate-800">{homework.dueTime ? `${homework.dueTime} น.` : 'ไม่ระบุเวลา'}</strong>
+              <strong className="text-slate-800">
+                {!hasNoDueTime && homework.dueTime ? `${homework.dueTime} น.` : 'ไม่มีเวลากำหนด'}
+              </strong>
             </div>
           </div>
         </div>
