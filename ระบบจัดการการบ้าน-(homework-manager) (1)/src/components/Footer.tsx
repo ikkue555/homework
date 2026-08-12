@@ -14,14 +14,14 @@ export const Footer: React.FC<FooterProps> = ({ siteSettings }) => {
     <footer className="mt-12 bg-white border-t border-slate-200/80 py-8 px-4 sm:px-6 lg:px-8 text-slate-600">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
         <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
-            <BookOpen className="w-5 h-5" />
+          <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100/80 shrink-0">
+            <BookOpen className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-bold font-heading text-slate-800">
+            <h4 className="text-xs font-semibold text-slate-800">
               {schoolName}
             </h4>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-[11px] text-slate-400 mt-0.5">
               {contactText}
             </p>
           </div>
@@ -43,3 +43,4 @@ export const Footer: React.FC<FooterProps> = ({ siteSettings }) => {
     </footer>
   );
 };
+

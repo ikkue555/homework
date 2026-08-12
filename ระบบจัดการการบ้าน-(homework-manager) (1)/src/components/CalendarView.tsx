@@ -9,15 +9,22 @@ import {
   Clock, 
   Layers,
   Sparkles,
-  Info
+  Info,
+  Edit3,
+  Trash2,
+  MapPin
 } from 'lucide-react';
-import { Homework, CalendarEvent } from '../types';
+import { Homework, CalendarEvent, ThemeId } from '../types';
+import { getThemeConfig } from '../lib/themes';
 
 interface CalendarViewProps {
   homeworks: Homework[];
   events: CalendarEvent[];
   onAddEventClick: (date?: string) => void;
   onHomeworkClick: (homework: Homework) => void;
+  onEditEvent?: (event: CalendarEvent) => void;
+  onDeleteEvent?: (eventId: string) => void;
+  currentTheme?: ThemeId;
 }
 
 const THAI_MONTHS = [
@@ -32,8 +39,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   events,
   onAddEventClick,
   onHomeworkClick,
+  onEditEvent,
+  onDeleteEvent,
+  currentTheme = 'sky',
 }) => {
+  const activeThemeConfig = getThemeConfig(currentTheme as ThemeId);
   const today = new Date();
+
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0 - 11
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
@@ -92,13 +104,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-sky-100 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
-              <CalendarIcon className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 text-2xl">
+              {activeThemeConfig.symbol}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-2xl font-bold font-heading text-slate-800">
-                  {THAI_MONTHS[currentMonth]} {currentYear + 543}
+                <h2 className="text-2xl font-bold font-heading text-slate-800 flex items-center gap-1.5">
+                  <span>{THAI_MONTHS[currentMonth]} {currentYear + 543}</span>
+                  <span className="text-lg animate-bounce">{activeThemeConfig.symbol}</span>
                 </h2>
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800">
                   {currentYear}
@@ -116,7 +129,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <button
                 onClick={() => setViewMode('month')}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'month' ? 'bg-white text-sky-700 shadow-xs' : 'text-slate-600 hover:text-slate-800'
+                  viewMode === 'month' ? 'bg-white text-sky-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-800'
                 }`}
               >
                 มุมมองเดือน
@@ -124,7 +137,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <button
                 onClick={() => setViewMode('year')}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'year' ? 'bg-white text-sky-700 shadow-xs' : 'text-slate-600 hover:text-slate-800'
+                  viewMode === 'year' ? 'bg-white text-sky-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-800'
                 }`}
               >
                 ภาพรวม 12 เดือน
@@ -142,9 +155,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               </button>
               <button
                 onClick={handleTodayClick}
-                className="px-3 py-1.5 text-xs font-bold font-heading border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold font-heading border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl transition-colors cursor-pointer flex items-center space-x-1"
               >
-                วันนี้
+                <span>{activeThemeConfig.symbol}</span>
+                <span>วันนี้</span>
               </button>
               <button
                 onClick={handleNextMonth}
@@ -158,8 +172,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             {/* Add Event Button */}
             <button
               onClick={() => onAddEventClick(selectedDateStr || undefined)}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold font-heading shadow-md flex items-center space-x-1.5 cursor-pointer ml-auto sm:ml-0"
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold font-heading shadow-md flex items-center space-x-1.5 cursor-pointer ml-auto sm:ml-0 transition-transform active:scale-95"
             >
+              <span className="text-sm">{activeThemeConfig.symbol}</span>
               <Plus className="w-4 h-4" />
               <span>เพิ่ม Event / กิจกรรม</span>
             </button>
@@ -316,7 +331,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     }`}
                   >
                     {/* Day Number Header */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between z-10">
                       <span
                         className={`text-xs sm:text-sm font-extrabold font-heading px-2 py-0.5 rounded-lg ${
                           isToday
@@ -343,6 +358,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         )}
                       </div>
                     </div>
+
+                    {/* Active Theme Symbol Watermark on Selected or Today Day */}
+                    {(isSelected || isToday) && (
+                      <div className="absolute right-0 bottom-0 text-3xl opacity-15 pointer-events-none select-none transform translate-x-1 translate-y-1">
+                        {activeThemeConfig.symbol}
+                      </div>
+                    )}
 
                     {/* Preview Cards/Pills on day cell */}
                     <div className="space-y-1 mt-1 overflow-hidden">
@@ -465,24 +487,61 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       {selectedEvents.map((evt) => (
                         <div
                           key={evt.id}
-                          className="p-3 rounded-2xl border bg-blue-50/50 border-blue-200 text-xs"
+                          className="p-3.5 rounded-2xl border bg-sky-50/50 border-sky-200 text-xs hover:border-sky-300 transition-all group"
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-blue-900">
-                              📌 {evt.title}
-                            </span>
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                              {evt.type}
-                            </span>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="space-y-1 pr-1">
+                              <span className="font-bold text-slate-800 text-xs block">
+                                📌 {evt.title}
+                              </span>
+                              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200/60">
+                                {evt.type}
+                              </span>
+                            </div>
+
+                            {/* Edit & Delete Action Buttons */}
+                            <div className="flex items-center space-x-1 shrink-0">
+                              {onEditEvent && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditEvent(evt);
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-sky-600 hover:bg-sky-100 rounded-lg transition-colors cursor-pointer"
+                                  title="แก้ไขกิจกรรม"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              {onDeleteEvent && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteEvent(evt.id);
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
+                                  title="ลบกิจกรรม"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
                           </div>
+
                           {evt.time && (
-                            <div className="text-[11px] text-slate-600 flex items-center space-x-1 mt-1">
-                              <Clock className="w-3 h-3 text-blue-600" />
+                            <div className="text-[11px] text-slate-600 flex items-center space-x-1 mt-1.5">
+                              <Clock className="w-3 h-3 text-sky-600" />
                               <span>เวลา {evt.time} น.</span>
                             </div>
                           )}
+                          {evt.location && (
+                            <div className="text-[11px] text-slate-600 flex items-center space-x-1 mt-1">
+                              <MapPin className="w-3 h-3 text-sky-600" />
+                              <span>สถานที่: {evt.location}</span>
+                            </div>
+                          )}
                           {evt.description && (
-                            <p className="text-[11px] text-slate-600 mt-1">
+                            <p className="text-[11px] text-slate-600 mt-1.5 bg-white/80 p-2 rounded-xl border border-slate-100">
                               {evt.description}
                             </p>
                           )}
@@ -500,6 +559,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => onAddEventClick(selectedDateStr || undefined)}
                 className="w-full py-2.5 bg-slate-50 hover:bg-sky-50 text-sky-700 font-bold font-heading text-xs rounded-xl border border-sky-200 transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
               >
+                <span className="text-sm">{activeThemeConfig.symbol}</span>
                 <Plus className="w-4 h-4" />
                 <span>+ เพิ่ม Event ในวันที่ {selectedDateStr || ''}</span>
               </button>

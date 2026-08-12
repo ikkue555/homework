@@ -417,7 +417,7 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
               3. ข้อความกล่องสถิติ & หน้ายังไม่มีข้อมูล (Dashboard & Empty States)
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">
                   หัวข้อการบ้านคงเหลือ (Pending Box)
@@ -427,32 +427,6 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
                   value={formData.statPendingLabel || ''}
                   onChange={(e) => handleFormChange('statPendingLabel', e.target.value)}
                   placeholder="การบ้านคงเหลือ"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  หัวข้อเสร็จสมบูรณ์ (Completed Box)
-                </label>
-                <input
-                  type="text"
-                  value={formData.statCompletedLabel || ''}
-                  onChange={(e) => handleFormChange('statCompletedLabel', e.target.value)}
-                  placeholder="เสร็จสมบูรณ์"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  หัวข้อเลยกำหนดส่ง (Overdue Box)
-                </label>
-                <input
-                  type="text"
-                  value={formData.statOverdueLabel || ''}
-                  onChange={(e) => handleFormChange('statOverdueLabel', e.target.value)}
-                  placeholder="เลยกำหนดส่ง"
                   className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>

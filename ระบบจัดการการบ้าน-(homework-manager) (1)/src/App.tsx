@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Homework, CalendarEvent, ActiveTab, HomeworkFilterState, UserProfile, SiteSettings, PRNewsItem } from './types';
+import { Homework, CalendarEvent, ActiveTab, HomeworkFilterState, UserProfile, SiteSettings, PRNewsItem, ThemeId } from './types';
+import { getStoredTheme, applyTheme } from './lib/themes';
 import { 
   getActiveSession, 
   logoutUser, 
@@ -30,12 +31,36 @@ import { AuthScreen } from './components/AuthScreen';
 import { PRNewsView } from './components/PRNewsView';
 import { AdminBackofficeView } from './components/AdminBackofficeView';
 import { PRPopupModal } from './components/PRPopupModal';
+import { ThemeSwitcherModal } from './components/ThemeSwitcherModal';
+import { ThemeBackgroundDecoration } from './components/ThemeBackgroundDecoration';
 import { Footer } from './components/Footer';
 import { PlusCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  // Theme Management System
+  const [currentTheme, setCurrentTheme] = useState<ThemeId>(getStoredTheme);
+  const [showFloatingIcons, setShowFloatingIcons] = useState<boolean>(() => {
+    const saved = localStorage.getItem('app_show_floating_icons');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+
+  useEffect(() => {
+    applyTheme(currentTheme);
+  }, [currentTheme]);
+
+  const handleSelectTheme = (themeId: ThemeId) => {
+    setCurrentTheme(themeId);
+    applyTheme(themeId);
+  };
+
+  const handleToggleFloatingIcons = (enabled: boolean) => {
+    setShowFloatingIcons(enabled);
+    localStorage.setItem('app_show_floating_icons', String(enabled));
+  };
 
   // Global Site Settings & PR News from Cloud
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
@@ -51,6 +76,7 @@ export default function App() {
   const [selectedDetailHomework, setSelectedDetailHomework] = useState<Homework | null>(null);
   
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [eventInitialDate, setEventInitialDate] = useState<string | undefined>(undefined);
 
   // Filters for main view
@@ -334,22 +360,53 @@ export default function App() {
     }
   };
 
-  const handleSaveEvent = async (eventData: Omit<CalendarEvent, 'id'>) => {
+  const handleSaveEvent = async (eventData: Omit<CalendarEvent, 'id'>, existingId?: string) => {
     if (!userProfile) return;
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: `evt-${Date.now()}`,
-    };
-    setEvents(prev => [...prev, newEvent]);
+    let savedEvent: CalendarEvent;
+
+    if (existingId) {
+      savedEvent = {
+        ...eventData,
+        id: existingId,
+      };
+      setEvents(prev => prev.map(e => (e.id === existingId ? savedEvent : e)));
+    } else {
+      savedEvent = {
+        ...eventData,
+        id: `evt-${Date.now()}`,
+      };
+      setEvents(prev => [...prev, savedEvent]);
+    }
+
+    setEditingEvent(null);
 
     try {
-      await saveEventToCloud(userProfile.uid, newEvent);
+      await saveEventToCloud(userProfile.uid, savedEvent);
     } catch (err) {
       console.error('Error saving event to cloud:', err);
     }
   };
 
+  const handleDeleteEvent = async (id: string) => {
+    if (!userProfile) return;
+    if (confirm('คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?')) {
+      setEvents(prev => prev.filter(e => e.id !== id));
+      try {
+        await deleteEventFromCloud(userProfile.uid, id);
+      } catch (err) {
+        console.error('Error deleting event from cloud:', err);
+      }
+    }
+  };
+
+  const handleEditEventClick = (event: CalendarEvent) => {
+    setEditingEvent(event);
+    setEventInitialDate(event.date);
+    setIsAddEventOpen(true);
+  };
+
   const handleOpenAddEventModal = (dateStr?: string) => {
+    setEditingEvent(null);
     setEventInitialDate(dateStr);
     setIsAddEventOpen(true);
   };
@@ -360,7 +417,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-sky-500 selection:text-white pb-10">
+    <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white pb-10 relative">
+      {/* Dynamic Theme Background Watermark Icons & Glow */}
+      {showFloatingIcons && <ThemeBackgroundDecoration currentTheme={currentTheme} />}
+
       {/* PR Entry Pop up Modal */}
       <PRPopupModal
         isOpen={isPopupOpen}
@@ -380,6 +440,8 @@ export default function App() {
         overdueCount={overdueList.length}
         userProfile={userProfile}
         siteSettings={siteSettings}
+        currentTheme={currentTheme}
+        onOpenThemeSwitcher={() => setIsThemeModalOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -516,6 +578,9 @@ export default function App() {
             events={events}
             onAddEventClick={handleOpenAddEventModal}
             onHomeworkClick={setSelectedDetailHomework}
+            onEditEvent={handleEditEventClick}
+            onDeleteEvent={handleDeleteEvent}
+            currentTheme={currentTheme}
           />
         )}
       </main>
@@ -539,12 +604,25 @@ export default function App() {
         }}
       />
 
-      {/* Add Event Modal */}
+      {/* Add or Edit Event Modal */}
       <AddEventModal
         isOpen={isAddEventOpen}
-        onClose={() => setIsAddEventOpen(false)}
+        onClose={() => {
+          setIsAddEventOpen(false);
+          setEditingEvent(null);
+        }}
         onSaveEvent={handleSaveEvent}
         initialDate={eventInitialDate}
+        editingEvent={editingEvent}
+      />
+      {/* Theme Switcher Modal */}
+      <ThemeSwitcherModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        currentTheme={currentTheme}
+        onSelectTheme={handleSelectTheme}
+        showFloatingIcons={showFloatingIcons}
+        onToggleFloatingIcons={handleToggleFloatingIcons}
       />
     </div>
   );

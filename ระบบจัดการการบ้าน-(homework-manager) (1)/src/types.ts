@@ -1,3 +1,16 @@
+export type ThemeId = 'orange' | 'kiwi' | 'panda' | 'flamingo' | 'jungle' | 'crimson' | 'sky';
+
+export interface ThemeConfig {
+  id: ThemeId;
+  name: string;
+  category: 'fruit' | 'animal' | 'special' | 'classic';
+  symbol: string;
+  tagline: string;
+  badgeBg: string;
+  badgeText: string;
+  previewColors: string[];
+}
+
 export type WorkType = 'เดี่ยว' | 'กลุ่ม';
 
 export type HomeworkType = 
@@ -27,7 +40,7 @@ export interface Homework {
   createdAt: string;
 }
 
-export type EventType = 'สอบ' | 'กิจกรรมโรงเรียน' | 'วันหยุด' | 'นัดหมายกลุ่ม' | 'อื่นๆ';
+export type EventType = 'สอบ' | 'กิจกรรมโรงเรียน' | 'วันหยุด' | 'นัดหมายกลุ่ม' | 'อื่นๆ' | string;
 
 export interface CalendarEvent {
   id: string;

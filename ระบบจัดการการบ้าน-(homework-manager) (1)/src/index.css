@@ -3,30 +3,476 @@
 @layer base {
   :root {
     --font-heading: 'Kanit', sans-serif;
-    --font-body: 'Sukhumvit Set', 'Prompt', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Kanit', sans-serif;
+
+    /* 🩵 ฟ้าคลาสสิก (Classic Sky) */
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-header: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-header: #0369a1;
+    --primary-color: #0284c7;
+    --primary-hover: #0369a1;
+    --primary-light: #e0f2fe;
+    --text-on-light: #0369a1;
+    --accent-color: #0d9488;
+    --accent-light: #ccfbf1;
+    --border-color: #cbd5e1;
+    --card-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.08);
+    --theme-symbol: '🩵';
+  }
+
+  /* 🍊 ธีมส้ม (Orange Citrus) */
+  [data-theme="orange"] {
+    --bg-main: #fff7ed;
+    --bg-card: #ffffff;
+    --bg-header: #fffaf5;
+    --text-primary: #431407;
+    --text-secondary: #7c2d12;
+    --text-header: #c2410c;
+    --primary-color: #ea580c;
+    --primary-hover: #c2410c;
+    --primary-light: #ffedd5;
+    --text-on-light: #9a3412;
+    --accent-color: #16a34a;
+    --accent-light: #dcfce7;
+    --border-color: #fdba74;
+    --card-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.12);
+    --theme-symbol: '🍊';
+  }
+
+  /* 🥝 ธีมกีวี่ (Kiwi Green) */
+  [data-theme="kiwi"] {
+    --bg-main: #f7fcf6;
+    --bg-card: #ffffff;
+    --bg-header: #f0fdf4;
+    --text-primary: #14361e;
+    --text-secondary: #2d4a19;
+    --text-header: #3f6212;
+    --primary-color: #65a30d;
+    --primary-hover: #4d7c0f;
+    --primary-light: #ecfccb;
+    --text-on-light: #365314;
+    --accent-color: #b45309;
+    --accent-light: #fef3c7;
+    --border-color: #bef264;
+    --card-shadow: 0 10px 25px -5px rgba(101, 163, 13, 0.12);
+    --theme-symbol: '🥝';
+  }
+
+  /* 🐼 ธีมแพนด้า (Minimal Panda) */
+  [data-theme="panda"] {
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-header: #0f172a;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-header: #ffffff;
+    --primary-color: #0f172a;
+    --primary-hover: #1e293b;
+    --primary-light: #e2e8f0;
+    --text-on-light: #0f172a;
+    --accent-color: #15803d;
+    --accent-light: #dcfce7;
+    --border-color: #cbd5e1;
+    --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+    --theme-symbol: '🐼';
+  }
+
+  /* 🦩 ธีมฟลามิงโก้ (Pink Flamingo) */
+  [data-theme="flamingo"] {
+    --bg-main: #fff5f8;
+    --bg-card: #ffffff;
+    --bg-header: #fdf2f8;
+    --text-primary: #500724;
+    --text-secondary: #831843;
+    --text-header: #be185d;
+    --primary-color: #db2777;
+    --primary-hover: #be185d;
+    --primary-light: #fce7f3;
+    --text-on-light: #831843;
+    --accent-color: #0284c7;
+    --accent-light: #e0f2fe;
+    --border-color: #f472b6;
+    --card-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.12);
+    --theme-symbol: '🦩';
+  }
+
+  /* 🌿 ธีมกินพืช (Plant Eater / Jungle) */
+  [data-theme="jungle"] {
+    --bg-main: #f0fdf4;
+    --bg-card: #ffffff;
+    --bg-header: #064e3b;
+    --text-primary: #022c22;
+    --text-secondary: #065f46;
+    --text-header: #ffffff;
+    --primary-color: #059669;
+    --primary-hover: #047857;
+    --primary-light: #d1fae5;
+    --text-on-light: #065f46;
+    --accent-color: #d97706;
+    --accent-light: #fef3c7;
+    --border-color: #6ee7b7;
+    --card-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.14);
+    --theme-symbol: '🌿';
+  }
+
+  /* 🦖 ธีมกินเนื้อ (Meat Eater / Crimson) */
+  [data-theme="crimson"] {
+    --bg-main: #fef2f2;
+    --bg-card: #ffffff;
+    --bg-header: #450a0a;
+    --text-primary: #450a0a;
+    --text-secondary: #7f1d1d;
+    --text-header: #ffffff;
+    --primary-color: #dc2626;
+    --primary-hover: #b91c1c;
+    --primary-light: #fee2e2;
+    --text-on-light: #991b1b;
+    --accent-color: #92400e;
+    --accent-light: #fef3c7;
+    --border-color: #f87171;
+    --card-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.15);
+    --theme-symbol: '🦖';
+  }
+
+  * {
+    font-family: 'Kanit', sans-serif;
   }
 
   body {
-    font-family: var(--font-body);
+    font-family: 'Kanit', sans-serif;
+    background-color: var(--bg-main) !important;
+    color: var(--text-primary) !important;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   h1, h2, h3, h4, h5, h6, .font-heading {
-    font-family: var(--font-heading);
+    font-family: 'Kanit', sans-serif;
+  }
+
+  input, button, select, textarea {
+    font-family: 'Kanit', sans-serif;
   }
 }
 
-/* Custom modern scrollbars */
+/* INTERACTIVE MICRO-ANIMATIONS & HOVER / CLICK EFFECTS */
+button, 
+a, 
+input[type="submit"], 
+input[type="button"], 
+.interactive-btn {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              box-shadow 0.2s ease, 
+              background-color 0.2s ease, 
+              border-color 0.2s ease,
+              opacity 0.15s ease;
+}
+
+button:hover:not(:disabled), 
+a:hover, 
+.interactive-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+}
+
+button:active:not(:disabled), 
+a:active, 
+.interactive-btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.95) !important;
+  transition-duration: 0.08s !important;
+}
+
+/* Card Lift & Interactive Glow Effects */
+.card-interactive {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.25s ease, 
+              border-color 0.25s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(2, 132, 199, 0.15), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Shimmer Light Effect on Hover */
+@keyframes shimmerPass {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.btn-shimmer {
+  background-size: 200% 100%;
+  transition: background-position 0.5s ease;
+}
+
+.btn-shimmer:hover {
+  background-position: right center;
+}
+
+/* Pulsing Badge & Icon Effects */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(2, 132, 199, 0);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s infinite;
+}
+
+/* OVERRIDE UTILITIES FOR HIGH READABILITY & CONTRAST */
+[data-theme] body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-primary) !important;
+}
+
+/* High contrast text rules for clear legibility */
+.text-slate-400 {
+  color: #64748b !important;
+}
+
+.text-slate-500 {
+  color: #334155 !important;
+}
+
+.text-slate-600 {
+  color: #1e293b !important;
+}
+
+.text-slate-700,
+.text-slate-800,
+.text-slate-900 {
+  color: #0f172a !important;
+}
+
+/* Inputs, Selects & Placeholders */
+input, select, textarea {
+  color: #0f172a !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+select option {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+/* Header theme customization */
+[data-theme] header {
+  background-color: var(--bg-header) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme] header h1 {
+  color: var(--text-header) !important;
+}
+
+/* Dark Headers (Panda, Jungle, Crimson) Styling Rules */
+[data-theme="panda"] header,
+[data-theme="jungle"] header,
+[data-theme="crimson"] header {
+  background-color: var(--bg-header) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="panda"] header h1,
+[data-theme="jungle"] header h1,
+[data-theme="crimson"] header h1 {
+  color: #ffffff !important;
+}
+
+[data-theme="panda"] header p,
+[data-theme="jungle"] header p,
+[data-theme="crimson"] header p {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Override text-slate classes inside dark headers to stay crisp white */
+[data-theme="panda"] header .text-slate-400,
+[data-theme="jungle"] header .text-slate-400,
+[data-theme="crimson"] header .text-slate-400 {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+[data-theme="panda"] header .text-slate-500,
+[data-theme="jungle"] header .text-slate-500,
+[data-theme="crimson"] header .text-slate-500,
+[data-theme="panda"] header .text-slate-600,
+[data-theme="jungle"] header .text-slate-600,
+[data-theme="crimson"] header .text-slate-600,
+[data-theme="panda"] header .text-slate-700,
+[data-theme="jungle"] header .text-slate-700,
+[data-theme="crimson"] header .text-slate-700,
+[data-theme="panda"] header .text-slate-800,
+[data-theme="jungle"] header .text-slate-800,
+[data-theme="crimson"] header .text-slate-800 {
+  color: #ffffff !important;
+}
+
+/* Dark header pills & badges */
+[data-theme="panda"] header .header-pill,
+[data-theme="jungle"] header .header-pill,
+[data-theme="crimson"] header .header-pill {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="panda"] header nav button:not(.bg-sky-600),
+[data-theme="jungle"] header nav button:not(.bg-sky-600),
+[data-theme="crimson"] header nav button:not(.bg-sky-600) {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="panda"] header nav button:not(.bg-sky-600):hover,
+[data-theme="jungle"] header nav button:not(.bg-sky-600):hover,
+[data-theme="crimson"] header nav button:not(.bg-sky-600):hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+/* Primary buttons, badges, active tabs, icons with bg-sky-600 */
+[data-theme] .bg-sky-600,
+[data-theme] .bg-sky-500 {
+  background-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+[data-theme] .hover\:bg-sky-700:hover,
+[data-theme] .hover\:bg-sky-600:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+[data-theme] .bg-sky-50,
+[data-theme] .bg-sky-100 {
+  background-color: var(--primary-light) !important;
+}
+
+[data-theme] .text-sky-600,
+[data-theme] .text-sky-500 {
+  color: var(--primary-color) !important;
+}
+
+/* Badges & Pills text for ultra-high contrast on light primary backgrounds */
+[data-theme] .text-sky-700,
+[data-theme] .text-sky-800 {
+  color: var(--text-on-light) !important;
+}
+
+[data-theme] .border-sky-600,
+[data-theme] .border-sky-500,
+[data-theme] .border-sky-200,
+[data-theme] .border-sky-100 {
+  border-color: var(--border-color) !important;
+}
+
+[data-theme] .ring-sky-500,
+[data-theme] .ring-sky-600,
+[data-theme] .focus\:ring-sky-500:focus,
+[data-theme] .focus\:ring-sky-600:focus {
+  --tw-ring-color: var(--primary-color) !important;
+}
+
+/* Cards & Containers */
+[data-theme] .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+[data-theme] .border-slate-200,
+[data-theme] .border-slate-100 {
+  border-color: var(--border-color) !important;
+}
+
+[data-theme] .bg-slate-50 {
+  background-color: var(--bg-main) !important;
+}
+
+/* Custom smooth scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-color);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #0284c7;
+  background: var(--primary-color);
+}
+
+/* Floating Animations for Theme Background Watermarks */
+@keyframes floatSmooth {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) rotate(8deg) scale(1.05);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-12px) rotate(-6deg) scale(0.96);
+  }
+  75% {
+    transform: translateY(15px) translateX(8px) rotate(4deg) scale(1.03);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+  }
+  33% {
+    transform: translateY(18px) translateX(-12px) rotate(-8deg) scale(0.95);
+  }
+  66% {
+    transform: translateY(-16px) translateX(10px) rotate(8deg) scale(1.04);
+  }
+}
+
+@keyframes floatDrift {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-25px) translateX(-15px) rotate(-12deg) scale(1.08);
+  }
+}
+
+@keyframes floatSway {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-15px) translateX(18px) rotate(8deg);
+  }
+}
+
+.animate-float-1 {
+  animation: floatSmooth 8s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: floatReverse 10.5s ease-in-out infinite;
+}
+
+.animate-float-3 {
+  animation: floatDrift 13s ease-in-out infinite;
+}
+
+.animate-float-4 {
+  animation: floatSway 9.5s ease-in-out infinite;
 }
