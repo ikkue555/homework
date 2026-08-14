@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
 import { BookOpen, KeyRound, UserCheck, ShieldCheck, Lock, Mail, User, AlertCircle, Sparkles, CheckSquare, Square } from 'lucide-react';
 import { registerUser, loginUser, ADMIN_SECRET_CODE } from '../lib/firebase';
-import { UserProfile } from '../types';
+import { UserProfile, SiteSettings } from '../types';
 
 interface AuthScreenProps {
-  onAuthSuccess: (profile: UserProfile) => void;
+  onSuccess?: (profile: UserProfile) => void;
+  onAuthSuccess?: (profile: UserProfile) => void;
+  siteSettings?: SiteSettings | null;
 }
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
+export const AuthScreen: React.FC<AuthScreenProps> = ({ 
+  onSuccess, 
+  onAuthSuccess,
+  siteSettings 
+}) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleSuccess = (profile: UserProfile) => {
+    if (onSuccess) onSuccess(profile);
+    if (onAuthSuccess) onAuthSuccess(profile);
+  };
 
   // Login form states
   const [loginUsernameOrEmail, setLoginUsernameOrEmail] = useState('');
@@ -45,7 +56,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
         password: loginPassword,
         remember30Days: remember30Days,
       });
-      onAuthSuccess(profile);
+      handleSuccess(profile);
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง');
@@ -96,7 +107,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
         isAdmin: isAdminChecked,
         adminCode: adminCodeInput,
       });
-      onAuthSuccess(profile);
+      handleSuccess(profile);
     } catch (err: any) {
       console.error('Register error:', err);
       setError(err.message || 'เกิดข้อผิดพลาดในการลงทะเบียน');
@@ -118,7 +129,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
             <BookOpen className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold font-heading text-slate-800 tracking-tight">
-            ระบบจัดการการบ้าน
+            {siteSettings?.appTitle || 'ระบบจัดการการบ้าน'}
           </h1>
           <p className="text-xs text-slate-500">
             {mode === 'login'

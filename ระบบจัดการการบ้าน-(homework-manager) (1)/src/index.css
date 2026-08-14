@@ -476,3 +476,210 @@ select option {
 .animate-float-4 {
   animation: floatSway 9.5s ease-in-out infinite;
 }
+
+/* ==========================================================================
+   MOBILE-ONLY RESPONSIVE OPTIMIZATIONS (@media max-width: 640px)
+   Focused on maximum vertical space saving, compact header, touch-friendly UI
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* 1. COMPACT HEADER & TOP ROW */
+  header {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  header .max-w-7xl {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  /* Compact top header row (single-line layout, minimal vertical space) */
+  header .border-b {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    gap: 0.35rem !important;
+  }
+
+  /* Compact Brand / Logo & Title */
+  header h1 {
+    font-size: 0.8125rem !important; /* 13px */
+    line-height: 1.15 !important;
+    max-width: 130px !important;
+  }
+
+  header h1 span.truncate {
+    max-width: 105px !important;
+  }
+
+  /* Logo container */
+  header .w-8.h-8,
+  header .w-9.h-9 {
+    width: 1.625rem !important;
+    height: 1.625rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  header .w-8.h-8 svg,
+  header .w-9.h-9 svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+
+  /* User profile badge & Logout in one tight parallel line */
+  header .header-pill {
+    padding: 0.2rem 0.4rem !important;
+    border-radius: 0.5rem !important;
+    gap: 0.25rem !important;
+  }
+
+  header .header-pill .w-6.h-6,
+  header .header-pill .w-7.h-7 {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    font-size: 0.625rem !important;
+    border-radius: 0.375rem !important;
+  }
+
+  header .header-pill span.truncate {
+    max-width: 55px !important;
+    font-size: 0.6875rem !important;
+  }
+
+  /* Compact action buttons in header (Theme, Logout, Add) */
+  header button {
+    padding: 0.25rem 0.45rem !important;
+    font-size: 0.6875rem !important;
+    border-radius: 0.5rem !important;
+    height: 1.75rem !important;
+  }
+
+  header button svg {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+  }
+
+  /* 2. NAVIGATION BAR (Clean, no text breaking, thumb-accessible) */
+  header nav {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    gap: 0.25rem !important;
+  }
+
+  header nav button {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.6875rem !important;
+    border-radius: 0.5rem !important;
+    height: 1.875rem !important;
+    white-space: nowrap !important;
+  }
+
+  header nav button svg {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+  }
+
+  /* 3. COMPACT HOMEWORK CARDS (Vertical Space Saver) */
+  .card-interactive {
+    border-radius: 0.875rem !important;
+    margin-bottom: 0.375rem !important;
+  }
+
+  .card-interactive > div {
+    padding: 0.625rem 0.75rem !important;
+  }
+
+  /* Tags & Subject Header */
+  .card-interactive span.rounded-lg,
+  .card-interactive span.rounded-md {
+    font-size: 0.6875rem !important;
+    padding: 0.125rem 0.375rem !important;
+  }
+
+  /* Homework description text - optimized size & spacing for small screens */
+  .card-interactive .formatted-desc,
+  .card-interactive p,
+  .card-interactive .text-xs {
+    font-size: 0.75rem !important; /* 12px */
+    line-height: 1.35 !important;
+  }
+
+  /* Footer action bar of card */
+  .card-interactive .border-t {
+    padding-top: 0.375rem !important;
+    margin-top: 0.375rem !important;
+  }
+
+  /* 4. FULL-WIDTH & TOUCH-FRIENDLY CALENDAR VIEW */
+  /* Remove container restrictions on mobile */
+  .CalendarView,
+  main .lg\:col-span-2 {
+    width: 100% !important;
+    padding: 0.5rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* Weekday header cells */
+  .grid-cols-7 > div.py-2,
+  .grid-cols-7 > div {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    font-size: 0.6875rem !important;
+    border-radius: 0.375rem !important;
+  }
+
+  /* Square-ratio thumb-friendly day cells */
+  .grid-cols-7 > div.min-h-\[75px\],
+  .grid-cols-7 > div.min-h-\[95px\],
+  .grid-cols-7 > div.min-h-\[70px\],
+  .grid-cols-7 > div.min-h-\[90px\] {
+    min-height: 0 !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0.25rem 0.15rem !important;
+    border-radius: 0.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    touch-action: manipulation;
+  }
+
+  /* Day number typography */
+  .grid-cols-7 span.font-extrabold {
+    font-size: 0.6875rem !important;
+    padding: 0.05rem 0.2rem !important;
+    border-radius: 0.25rem !important;
+    line-height: 1 !important;
+  }
+
+  /* Compact event dots & badges inside day cells */
+  .grid-cols-7 .space-y-0\.5,
+  .grid-cols-7 .space-y-1 {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 0.125rem !important;
+    width: 100% !important;
+  }
+
+  .grid-cols-7 .space-y-0\.5 > *,
+  .grid-cols-7 .space-y-1 > * {
+    font-size: 0 !important; /* Hide long text in day cell */
+    width: 0.35rem !important;
+    height: 0.35rem !important;
+    border-radius: 9999px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Smooth momentum touch scrolling for all horizontal lists */
+  .no-scrollbar {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Add bottom padding to body on mobile to ensure bottom navigation does not overlap content */
+  body {
+    padding-bottom: 3.75rem !important;
+  }
+}
+

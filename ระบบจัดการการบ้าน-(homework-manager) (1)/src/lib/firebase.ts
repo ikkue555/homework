@@ -27,6 +27,23 @@ const CURRENT_USER_SESSION_KEY = 'hw_app_current_user_session_v1';
  * Sanitize username/email for document ID in Firestore
  */
 export function sanitizeUserKey(emailOrUsername: string): string {
+  const normalized = emailOrUsername.trim().toLowerCase();
+  // Safe hex encoding for full UTF-8 / Thai / Latin characters without doc ID collisions
+  try {
+    const hex = Array.from(new TextEncoder().encode(normalized))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    return `usr_${hex}`;
+  } catch {
+    const clean = normalized.replace(/[^a-z0-9_@.-]/g, '_');
+    return `usr_${clean}`;
+  }
+}
+
+/**
+ * Legacy key for backward compatibility check
+ */
+export function legacyUserKey(emailOrUsername: string): string {
   const clean = emailOrUsername.trim().toLowerCase().replace(/[^a-z0-9_@.-]/g, '_');
   return `usr_${clean}`;
 }
@@ -103,7 +120,19 @@ export async function loginUser({
 }): Promise<UserProfile> {
   const userKey = sanitizeUserKey(emailOrUsername);
   const userDocRef = doc(db, 'users', userKey);
-  const userSnap = await getDoc(userDocRef);
+  let userSnap = await getDoc(userDocRef);
+
+  // Fallback check for legacy user keys
+  if (!userSnap.exists()) {
+    const legacyKey = legacyUserKey(emailOrUsername);
+    if (legacyKey !== userKey) {
+      const legacyDocRef = doc(db, 'users', legacyKey);
+      const legacySnap = await getDoc(legacyDocRef);
+      if (legacySnap.exists()) {
+        userSnap = legacySnap;
+      }
+    }
+  }
 
   if (!userSnap.exists()) {
     throw new Error('ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง');
@@ -115,7 +144,7 @@ export async function loginUser({
   }
 
   const profile: UserProfile = {
-    uid: userData.uid || userKey,
+    uid: userData.uid || userSnap.id || userKey,
     displayName: userData.displayName || emailOrUsername,
     email: userData.email || `${emailOrUsername}@homework.app`,
     username: userData.username || emailOrUsername,
@@ -123,14 +152,15 @@ export async function loginUser({
     createdAt: userData.createdAt || new Date().toISOString(),
   };
 
-  // Store session
+  // Store session with profile caching
   const duration = remember30Days 
     ? 30 * 24 * 60 * 60 * 1000  // 30 days
     : 24 * 60 * 60 * 1000;       // 1 day session
   
   const expiry = Date.now() + duration;
   localStorage.setItem(CURRENT_USER_SESSION_KEY, JSON.stringify({
-    uid: userKey,
+    uid: profile.uid,
+    profile: profile,
     expiry: expiry,
     remember30Days: remember30Days
   }));
@@ -149,26 +179,40 @@ export async function getActiveSession(): Promise<UserProfile | null> {
     const session = JSON.parse(raw);
     if (!session || !session.uid) return null;
 
-    if (Date.now() > session.expiry) {
-      // Session expired after 30 days
+    if (session.expiry && Date.now() > session.expiry) {
       localStorage.removeItem(CURRENT_USER_SESSION_KEY);
       return null;
     }
 
-    // Fetch fresh profile from Firestore
-    const userDocRef = doc(db, 'users', session.uid);
-    const userSnap = await getDoc(userDocRef);
+    // Try to fetch fresh profile from Firestore; use cached profile on network delay
+    try {
+      const userDocRef = doc(db, 'users', session.uid);
+      const userSnap = await getDoc(userDocRef);
 
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      return {
-        uid: userData.uid || session.uid,
-        displayName: userData.displayName || 'ผู้ใช้งาน',
-        email: userData.email || '',
-        username: userData.username,
-        role: userData.role || 'user',
-        createdAt: userData.createdAt || new Date().toISOString(),
-      };
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const freshProfile: UserProfile = {
+          uid: userData.uid || session.uid,
+          displayName: userData.displayName || 'ผู้ใช้งาน',
+          email: userData.email || '',
+          username: userData.username,
+          role: userData.role || 'user',
+          createdAt: userData.createdAt || new Date().toISOString(),
+        };
+        localStorage.setItem(CURRENT_USER_SESSION_KEY, JSON.stringify({
+          ...session,
+          profile: freshProfile
+        }));
+        return freshProfile;
+      }
+    } catch {
+      if (session.profile) {
+        return session.profile;
+      }
+    }
+
+    if (session.profile) {
+      return session.profile;
     }
 
     return null;

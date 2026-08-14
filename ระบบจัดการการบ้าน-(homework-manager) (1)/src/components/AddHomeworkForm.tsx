@@ -12,11 +12,7 @@ import {
   Save,
   X,
   Plus,
-  Trash2,
-  List,
-  Heading,
-  ListOrdered,
-  CheckSquare
+  Trash2
 } from 'lucide-react';
 import { Homework, WorkType, Priority } from '../types';
 import { FormattedDescription } from './FormattedDescription';
@@ -33,7 +29,6 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
   editingHomework,
 }) => {
   const [subject, setSubject] = useState('');
-  const [title, setTitle] = useState('');
   const [hasNoDueDate, setHasNoDueDate] = useState(false);
   const [dueDate, setDueDate] = useState('');
   const [hasNoDueTime, setHasNoDueTime] = useState(false);
@@ -51,7 +46,6 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
   useEffect(() => {
     if (editingHomework) {
       setSubject(editingHomework.subject || '');
-      setTitle(editingHomework.title || '');
 
       if (!editingHomework.dueDate || editingHomework.dueDate === 'ไม่มีกำหนดส่ง' || editingHomework.dueDate === 'no_due_date') {
         setHasNoDueDate(true);
@@ -101,14 +95,6 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
     });
   };
 
-  const handleInsertBullet = (prefix: string) => {
-    setDescription(prev => {
-      if (!prev) return `${prefix} `;
-      if (prev.endsWith('\n')) return `${prev}${prefix} `;
-      return `${prev}\n${prefix} `;
-    });
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -140,7 +126,6 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
     onSave(
       {
         subject: finalSubject,
-        title: title.trim() || undefined,
         dueDate: finalDueDate,
         dueTime: finalDueTime,
         workType,
@@ -167,7 +152,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
               {editingHomework ? 'แก้ไขข้อมูลการบ้าน' : 'เพิ่มการบ้านใหม่'}
             </h2>
             <p className="text-xs text-slate-500">
-              กรอกข้อมูลวิชา หัวข้องาน รายละเอียด และกำหนดส่งการบ้าน
+              กรอกข้อมูลวิชา รายละเอียด และกำหนดส่งการบ้าน
             </p>
           </div>
         </div>
@@ -196,21 +181,6 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
             onChange={(e) => setSubject(e.target.value)}
             className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
             required
-          />
-        </div>
-
-        {/* Title (หัวข้องาน - กรอกเอง) */}
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
-            <Heading className="w-4 h-4 text-sky-600" />
-            <span>หัวข้องาน / ชื่อการบ้าน (กรอกเอง)</span>
-          </label>
-          <input
-            type="text"
-            placeholder="กรอกหัวข้องาน (เช่น ใบงานที่ 3 เรื่องสมการเคมี, รายงานกลุ่ม)..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
           />
         </div>
 
@@ -381,49 +351,12 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
           </div>
         )}
 
-        {/* Description (รายละเอียดของงาน - Bullet / ข้อๆ) */}
+        {/* Description (รายละเอียดของงาน) */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-semibold text-slate-700 flex items-center space-x-1.5">
-              <FileText className="w-4 h-4 text-sky-600" />
-              <span>รายละเอียดของงาน <span className="text-rose-500">*</span></span>
-            </label>
-
-            {/* Quick Bullet Formatting Toolbar */}
-            <div className="flex items-center space-x-1">
-              <button
-                type="button"
-                onClick={() => handleInsertBullet('•')}
-                className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors flex items-center space-x-1 cursor-pointer"
-                title="แทรกหัวข้อสัญลักษณ์จุด (Bullet)"
-              >
-                <List className="w-3.5 h-3.5" />
-                <span>+ ข้อ •</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleInsertBullet('1.')}
-                className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors flex items-center space-x-1 cursor-pointer"
-                title="แทรกหัวข้อตัวเลข (1., 2.)"
-              >
-                <ListOrdered className="w-3.5 h-3.5" />
-                <span>+ ข้อ 1.</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleInsertBullet('[ ]')}
-                className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors flex items-center space-x-1 cursor-pointer"
-                title="แทรกช่องติ๊กรายการ"
-              >
-                <CheckSquare className="w-3.5 h-3.5" />
-                <span>+ ติ๊ก [ ]</span>
-              </button>
-            </div>
-          </div>
-
-          <p className="text-xs text-slate-500 mb-2">
-            สามารถพิมพ์เป็นความเรียง หรือกดปุ่มด้านขวาบนเพื่อใส่หัวข้อเป็นข้อๆ (Bullet) ได้ตามต้องการ
-          </p>
+          <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
+            <FileText className="w-4 h-4 text-sky-600" />
+            <span>รายละเอียดของงาน <span className="text-rose-500">*</span></span>
+          </label>
 
           <textarea
             rows={5}
@@ -441,7 +374,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
           {description.trim() && (
             <div className="mt-3 p-3.5 bg-slate-50/90 rounded-2xl border border-sky-100 text-xs">
               <span className="text-[10px] font-bold text-sky-700 uppercase tracking-wider block mb-1.5">
-                👁️ ตัวอย่างการแสดงผลแบบรายการ (Bullet Preview):
+                👁️ ตัวอย่างการแสดงผล:
               </span>
               <FormattedDescription text={description} className="text-xs" />
             </div>
@@ -512,3 +445,4 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
     </div>
   );
 };
+

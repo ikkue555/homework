@@ -68,152 +68,145 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 
   return (
     <div 
-      className={`bg-white rounded-2xl border transition-all duration-300 overflow-hidden shadow-xs card-interactive ${
+      className={`bg-white rounded-2xl border transition-all duration-300 overflow-hidden shadow-xs card-interactive flex flex-col justify-between ${
         homework.completed
-          ? 'border-emerald-200/80 bg-emerald-50/10'
+          ? 'border-emerald-200/90 bg-emerald-50/15'
           : isOverdue
-          ? 'border-rose-200/80'
+          ? 'border-rose-200/90'
           : isDueToday
-          ? 'border-amber-200/80'
+          ? 'border-amber-200/90'
           : 'border-slate-200/80 hover:border-sky-300'
       }`}
     >
-      <div className="p-4 sm:p-5">
-        {/* Header Badges & Actions */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex flex-wrap items-center gap-1.5">
+      <div className="p-3.5 sm:p-4.5 flex-1 flex flex-col">
+        {/* Top Badges & Quick Action Header */}
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          {/* Tags Group */}
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
             {/* Subject Tag */}
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100">
+            <span className="text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-lg bg-sky-50 text-sky-700 border border-sky-100/90 shrink-0">
               {homework.subject}
             </span>
 
             {/* Work Type Badge */}
             <span 
-              className={`text-[11px] font-medium px-2 py-0.5 rounded-full flex items-center space-x-1 ${
+              className={`text-[10px] sm:text-[11px] font-medium px-2 py-0.5 rounded-md flex items-center space-x-1 shrink-0 ${
                 homework.workType === 'กลุ่ม'
                   ? 'bg-purple-50 text-purple-700 border border-purple-100'
-                  : 'bg-slate-50 text-slate-600 border border-slate-200/70'
+                  : 'bg-slate-100 text-slate-600 border border-slate-200/60'
               }`}
             >
               {homework.workType === 'กลุ่ม' ? (
                 <>
                   <Users className="w-3 h-3 text-purple-600" />
-                  <span>งานกลุ่ม ({homework.members?.length || 0} คน)</span>
+                  <span>กลุ่ม ({homework.members?.length || 0})</span>
                 </>
               ) : (
                 <>
                   <User className="w-3 h-3 text-slate-400" />
-                  <span>งานเดี่ยว</span>
+                  <span>เดี่ยว</span>
                 </>
               )}
             </span>
 
-            {/* Assignment Type if provided */}
-            {homework.type && (
-              <span className="text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200/70 px-2 py-0.5 rounded-full flex items-center space-x-1">
-                <Tag className="w-3 h-3 text-slate-400" />
-                <span>{homework.type}</span>
-              </span>
-            )}
-
             {/* Priority Badge */}
             {homework.priority === 'ด่วนที่สุด' && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200/80">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200/80 shrink-0">
                 🔥 ด่วนที่สุด
               </span>
             )}
           </div>
 
-          {/* Quick Complete Button */}
+          {/* Quick Toggle Complete Button */}
           <button
             onClick={() => onToggleComplete(homework.id)}
             title={homework.completed ? 'ทำเป็นยังไม่เสร็จ' : 'กดว่าเสร็จสมบูรณ์'}
-            className={`flex-shrink-0 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center space-x-1 text-xs ${
+            className={`shrink-0 px-2 py-1 rounded-xl transition-all cursor-pointer flex items-center space-x-1 text-xs font-semibold ${
               homework.completed
-                ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 font-medium'
-                : 'bg-slate-50 text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200/80'
+                ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
+                : 'bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200/80'
             }`}
           >
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {homework.completed ? 'เสร็จแล้ว' : 'ทำเสร็จแล้ว'}
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="text-[11px]">
+              {homework.completed ? 'เสร็จ' : 'เสร็จแล้ว'}
             </span>
           </button>
         </div>
 
         {/* Task Title & Details */}
-        <div className="mb-3">
+        <div className="mb-3 flex-1">
           {homework.title && (
             <h3 className="text-slate-900 text-sm sm:text-base font-bold font-heading leading-snug mb-1">
               {homework.title}
             </h3>
           )}
-          <FormattedDescription text={homework.description} className="text-xs sm:text-sm" />
+          <FormattedDescription text={homework.description} className="text-xs sm:text-sm text-slate-600" />
         </div>
 
-        {/* Due Date & Countdown Status */}
-        <div className="flex flex-wrap items-center justify-between gap-2 py-2.5 px-3 bg-slate-50/80 rounded-xl border border-slate-100 text-xs">
-          <div className="flex items-center space-x-1.5 text-slate-600">
-            <Calendar className="w-3.5 h-3.5 text-sky-600 flex-shrink-0" />
-            <span>
-              กำหนดส่ง: <strong className="text-slate-800 font-medium">{formattedDueDate}</strong>
+        {/* Due Date & Countdown Status Pill */}
+        <div className="flex flex-wrap items-center justify-between gap-1.5 py-2 px-2.5 bg-slate-50/90 rounded-xl border border-slate-100 text-xs mb-3">
+          <div className="flex items-center space-x-1.5 text-slate-600 min-w-0">
+            <Calendar className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+            <span className="text-[11px] sm:text-xs truncate">
+              ส่ง: <strong className="text-slate-800 font-semibold">{formattedDueDate}</strong>
             </span>
             {!hasNoDueTime && homework.dueTime && (
-              <span className="text-slate-400">({homework.dueTime} น.)</span>
+              <span className="text-slate-400 text-[10px] sm:text-[11px] shrink-0">({homework.dueTime})</span>
             )}
           </div>
 
-          <div>
+          <div className="shrink-0">
             {homework.completed ? (
-              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100/80 text-emerald-800">
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-emerald-100 text-emerald-800">
                 <Sparkles className="w-3 h-3 text-emerald-600" />
-                <span>เสร็จสมบูรณ์แล้ว</span>
+                <span>เสร็จแล้ว</span>
               </span>
             ) : hasNoDueDate ? (
-              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
                 <Clock className="w-3 h-3 text-slate-400" />
-                <span>ยังไม่มีกำหนดส่ง</span>
+                <span>ไม่มีกำหนดส่ง</span>
               </span>
             ) : isOverdue ? (
-              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100/80 text-rose-800">
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-rose-100 text-rose-800 animate-pulse">
                 <AlertCircle className="w-3 h-3 text-rose-600" />
                 <span>เลยกำหนด {Math.abs(diffDays)} วัน!</span>
               </span>
             ) : isDueToday ? (
-              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100/80 text-amber-800">
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-amber-100 text-amber-900">
                 <Clock className="w-3 h-3 text-amber-600" />
                 <span>ส่งวันนี้!</span>
               </span>
             ) : (
-              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-sky-50 text-sky-700 border border-sky-100">
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-sky-50 text-sky-700 border border-sky-100">
                 <Clock className="w-3 h-3 text-sky-600" />
-                <span>เหลืออีก {diffDays} วัน</span>
+                <span>อีก {diffDays} วัน</span>
               </span>
             )}
           </div>
         </div>
 
-        {/* Progress Section */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between mb-1 text-xs">
+        {/* Progress Bar & Thumb-Friendly Quick Update Buttons */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
             <div className="flex items-center space-x-1.5">
-              <span className="text-slate-500 font-normal">ความคืบหน้า:</span>
-              <span className="font-semibold text-slate-800">
+              <span className="text-slate-500 text-[11px] font-normal">ความคืบหน้า:</span>
+              <span className="font-bold text-slate-800 text-xs">
                 {homework.progress}%
               </span>
             </div>
 
             <button
               onClick={() => setShowProgressSlider(!showProgressSlider)}
-              className="text-[11px] text-sky-600 hover:text-sky-700 font-medium flex items-center space-x-1 cursor-pointer"
+              className="text-[10px] sm:text-[11px] text-sky-600 hover:text-sky-700 font-semibold flex items-center space-x-1 cursor-pointer py-0.5"
             >
               <Sliders className="w-3 h-3" />
-              <span>{showProgressSlider ? 'ซ่อนตัวปรับ' : 'ปรับ %'}</span>
+              <span>{showProgressSlider ? 'ซ่อนตัวเลื่อน' : 'เลื่อนแบบละเอียด'}</span>
             </button>
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          {/* Visual Progress Bar */}
+          <div className="w-full bg-slate-100 h-1.5 sm:h-2 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-300 ${
                 homework.progress === 100
@@ -226,9 +219,9 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
             />
           </div>
 
-          {/* Slider or Quick Buttons */}
+          {/* Quick % Buttons for Thumb Tapping (25%, 50%, 75%, 100%) */}
           {showProgressSlider ? (
-            <div className="mt-2.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200/60 space-y-2">
+            <div className="pt-1.5 space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
               <div className="flex items-center space-x-2">
                 <input
                   type="range"
@@ -239,18 +232,18 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
                   onChange={(e) => onUpdateProgress(homework.id, parseInt(e.target.value))}
                   className="w-full accent-sky-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
                 />
-                <span className="text-xs font-semibold text-slate-700 min-w-[30px] text-right">
+                <span className="text-xs font-bold text-slate-700 min-w-[32px] text-right">
                   {homework.progress}%
                 </span>
               </div>
-              <div className="flex justify-between items-center gap-1">
+              <div className="grid grid-cols-5 gap-1">
                 {[0, 25, 50, 75, 100].map((step) => (
                   <button
                     key={step}
                     onClick={() => onUpdateProgress(homework.id, step)}
-                    className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
+                    className={`text-[10px] py-1 rounded-lg font-bold transition-all cursor-pointer text-center ${
                       homework.progress === step
-                        ? 'bg-sky-600 text-white'
+                        ? 'bg-sky-600 text-white shadow-2xs'
                         : 'bg-white text-slate-600 border border-slate-200 hover:bg-sky-50'
                     }`}
                   >
@@ -261,37 +254,45 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
             </div>
           ) : (
             !homework.completed && homework.progress < 100 && (
-              <div className="flex items-center space-x-1 mt-1.5">
-                <span className="text-[10px] text-slate-400 mr-1">อัปเดต:</span>
-                {[25, 50, 75, 100].map((val) => (
-                  <button
-                    key={val}
-                    onClick={() => onUpdateProgress(homework.id, val)}
-                    className="text-[10px] px-1.5 py-0.5 bg-white border border-slate-200 text-slate-600 hover:border-sky-400 hover:text-sky-600 rounded font-medium transition-colors cursor-pointer"
-                  >
-                    {val}%
-                  </button>
-                ))}
+              <div className="pt-1">
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[25, 50, 75, 100].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => onUpdateProgress(homework.id, val)}
+                      className={`py-1.5 text-xs rounded-xl font-bold font-heading border transition-all cursor-pointer flex items-center justify-center shadow-2xs ${
+                        homework.progress === val
+                          ? 'bg-sky-600 text-white border-sky-600'
+                          : val === 100
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300'
+                          : 'bg-slate-50 text-slate-700 border-slate-200/90 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-300'
+                      }`}
+                      title={`ตั้งค่าความคืบหน้าเป็น ${val}%`}
+                    >
+                      {val === 100 ? 'เสร็จ 100%' : `${val}%`}
+                    </button>
+                  ))}
+                </div>
               </div>
             )
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100">
+        {/* Footer Actions (Details, Edit, Delete) */}
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
           <button
             onClick={() => onViewDetail(homework)}
-            className="text-xs text-slate-600 hover:text-sky-600 font-medium flex items-center space-x-1 cursor-pointer py-0.5"
+            className="text-xs text-slate-600 hover:text-sky-600 font-medium flex items-center space-x-1 cursor-pointer py-1"
           >
             <Info className="w-3.5 h-3.5 text-slate-400" />
-            <span>รายละเอียด</span>
+            <span>ดูรายละเอียด</span>
             <ChevronRight className="w-3 h-3 text-slate-400" />
           </button>
 
           <div className="flex items-center space-x-1">
             <button
               onClick={() => onEdit(homework)}
-              title="แก้ไขข้อมูล"
+              title="แก้ไขข้อมูลการบ้าน"
               className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -309,4 +310,3 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
     </div>
   );
 };
-

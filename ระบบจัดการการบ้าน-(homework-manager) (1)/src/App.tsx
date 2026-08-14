@@ -34,52 +34,43 @@ import { PRPopupModal } from './components/PRPopupModal';
 import { ThemeSwitcherModal } from './components/ThemeSwitcherModal';
 import { ThemeBackgroundDecoration } from './components/ThemeBackgroundDecoration';
 import { Footer } from './components/Footer';
-import { PlusCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { PlusCircle, CheckCircle2, Loader2, Plus } from 'lucide-react';
 
 export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
 
-  // Theme Management System
-  const [currentTheme, setCurrentTheme] = useState<ThemeId>(getStoredTheme);
+  // Homeworks state - populated from Firebase
+  const [homeworks, setHomeworks] = useState<Homework[]>([]);
+  const [isHomeworksLoading, setIsHomeworksLoading] = useState<boolean>(true);
+
+  // Calendar Events state - populated from Firebase
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  // PR News state - populated from Firebase
+  const [newsList, setNewsList] = useState<PRNewsItem[]>([]);
+
+  // Site Settings state - populated from Firebase
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
+
+  // Theme state
+  const [currentTheme, setCurrentTheme] = useState<ThemeId>(() => getStoredTheme());
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [showFloatingIcons, setShowFloatingIcons] = useState<boolean>(() => {
-    const saved = localStorage.getItem('app_show_floating_icons');
+    const saved = localStorage.getItem('theme_floating_icons');
     return saved !== null ? saved === 'true' : true;
   });
-  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
-  useEffect(() => {
-    applyTheme(currentTheme);
-  }, [currentTheme]);
-
-  const handleSelectTheme = (themeId: ThemeId) => {
-    setCurrentTheme(themeId);
-    applyTheme(themeId);
-  };
-
-  const handleToggleFloatingIcons = (enabled: boolean) => {
-    setShowFloatingIcons(enabled);
-    localStorage.setItem('app_show_floating_icons', String(enabled));
-  };
-
-  // Global Site Settings & PR News from Cloud
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
-  const [prNewsList, setPrNewsList] = useState<PRNewsItem[]>([]);
-  const [isPopupOpen, setIsPopupOpen] = useState(true);
-
-  const [homeworks, setHomeworks] = useState<Homework[]>([]);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('main');
-
-  // Modals & detail selection
-  const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
   const [selectedDetailHomework, setSelectedDetailHomework] = useState<Homework | null>(null);
-  
-  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [eventInitialDate, setEventInitialDate] = useState<string | undefined>(undefined);
+  const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
 
-  // Filters for main view
+  // Add Event Modal
+  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+  const [eventInitialDate, setEventInitialDate] = useState<string | undefined>();
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+
+  // Filter State
   const [filters, setFilters] = useState<HomeworkFilterState>({
     searchQuery: '',
     subject: '',
@@ -89,74 +80,103 @@ export default function App() {
     sortBy: 'dueDate_asc',
   });
 
-  // Load Active Session on Startup
+  // Apply Theme on load & change
   useEffect(() => {
-    async function loadSession() {
-      setAuthLoading(true);
-      const session = await getActiveSession();
-      if (session) {
+    applyTheme(currentTheme);
+  }, [currentTheme]);
+
+  const handleSelectTheme = (themeId: ThemeId) => {
+    setCurrentTheme(themeId);
+  };
+
+  const handleToggleFloatingIcons = (show: boolean) => {
+    setShowFloatingIcons(show);
+    localStorage.setItem('theme_floating_icons', String(show));
+  };
+
+  // Check auth session
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await getActiveSession();
         setUserProfile(session);
-      } else {
-        setUserProfile(null);
-        setHomeworks([]);
-        setEvents([]);
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      } finally {
+        setIsAuthChecking(false);
       }
-      setAuthLoading(false);
-    }
-    loadSession();
+    };
+    checkAuth();
   }, []);
 
-  // Real-time Global Subscriptions (Site Settings & PR News)
+  // Subscribe to site settings
   useEffect(() => {
-    const unsubSettings = subscribeToSiteSettings((settings) => {
+    const unsubscribe = subscribeToSiteSettings((settings) => {
       setSiteSettings(settings);
     });
-
-    const unsubNews = subscribeToPRNews((news) => {
-      setPrNewsList(news);
-    });
-
-    return () => {
-      unsubSettings();
-      unsubNews();
-    };
+    return () => unsubscribe();
   }, []);
 
-  // Subscribe to user-specific Firestore collections
+  // Subscribe to PR News
   useEffect(() => {
-    if (!userProfile) return;
-
-    const unsubscribeHomeworks = subscribeToUserHomeworks(userProfile.uid, (items) => {
-      setHomeworks(items);
+    const unsubscribe = subscribeToPRNews((news) => {
+      setNewsList(news);
     });
+    return () => unsubscribe();
+  }, []);
 
-    const unsubscribeEvents = subscribeToUserEvents(userProfile.uid, (itemEvents) => {
-      setEvents(itemEvents);
-    });
+  // Subscribe to Homeworks & Events when user is logged in
+  useEffect(() => {
+    if (!userProfile) {
+      setHomeworks([]);
+      setEvents([]);
+      setIsHomeworksLoading(false);
+      return;
+    }
+
+    setIsHomeworksLoading(true);
+
+    const unsubHomeworks = subscribeToUserHomeworks(
+      userProfile.uid,
+      (data) => {
+        setHomeworks(data);
+        setIsHomeworksLoading(false);
+      },
+      (error) => {
+        console.error("Homeworks subscription error:", error);
+        setIsHomeworksLoading(false);
+      }
+    );
+
+    const unsubEvents = subscribeToUserEvents(
+      userProfile.uid,
+      (data) => {
+        setEvents(data);
+      },
+      (error) => {
+        console.error("Events subscription error:", error);
+      }
+    );
 
     return () => {
-      unsubscribeHomeworks();
-      unsubscribeEvents();
+      unsubHomeworks();
+      unsubEvents();
     };
-  }, [userProfile?.uid]);
+  }, [userProfile]);
 
   // Handle Logout
   const handleLogout = async () => {
-    if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
-      await logoutUser();
-      setUserProfile(null);
-      setHomeworks([]);
-      setEvents([]);
-      setActiveTab('main');
-    }
+    await logoutUser();
+    setUserProfile(null);
+    setActiveTab('main');
   };
 
-  // Admin PR News Handlers
-  const handleAddPRNews = async (newsData: Omit<PRNewsItem, 'id' | 'createdAt' | 'authorName'>) => {
+  // Handle PR news actions
+  const handleAddNews = async (item: Omit<PRNewsItem, 'id' | 'createdAt' | 'authorName'>) => {
     if (!userProfile) return;
     const newItem: PRNewsItem = {
-      ...newsData,
-      id: `pr-${Date.now()}`,
+      ...item,
+      id: Date.now().toString(),
       authorName: userProfile.displayName || 'แอดมิน',
       createdAt: new Date().toISOString(),
     };
@@ -167,123 +187,39 @@ export default function App() {
     await deletePRNewsFromCloud(id);
   };
 
-  // Admin Save Settings Handler
-  const handleSaveSiteSettings = async (newSettings: SiteSettings) => {
-    await saveSiteSettingsToCloud(newSettings);
+  // Handle Site settings save
+  const handleSaveSiteSettings = async (settings: SiteSettings) => {
+    if (!userProfile || userProfile.role !== 'admin') return;
+    await saveSiteSettingsToCloud(settings);
   };
 
-  // Auth Loading Screen
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-        <div className="flex flex-col items-center space-y-3 bg-white p-8 rounded-3xl border border-sky-100 shadow-md text-center max-w-sm w-full">
-          <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-sky-600" />
-          </div>
-          <h2 className="text-base font-bold font-heading text-slate-800">
-            กำลังตรวจสอบการเข้าสู่ระบบ...
-          </h2>
-          <p className="text-xs text-slate-500">
-            กรุณารอสักครู่ ระบบกำลังโหลดข้อมูลส่วนบุคคลของคุณ
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Homework CRUD Handlers
+  const handleSaveHomework = async (savedHw: Homework) => {
+    if (!userProfile) return;
+    await saveHomeworkToCloud(userProfile.uid, savedHw);
+    setEditingHomework(null);
+    setActiveTab('main');
+  };
 
-  // If not authenticated, show AuthScreen immediately
-  if (!userProfile) {
-    return (
-      <AuthScreen
-        onAuthSuccess={(profile) => {
-          setUserProfile(profile);
-        }}
-      />
-    );
-  }
-
-  // Counts for tabs
-  const todayStr = new Date().toISOString().split('T')[0];
-
-  const completedList = homeworks.filter(h => h.completed || h.progress === 100);
-  const overdueList = homeworks.filter(h => !h.completed && h.progress < 100 && h.dueDate < todayStr);
-  const mainRemainingList = homeworks.filter(h => !h.completed && h.progress < 100 && h.dueDate >= todayStr);
-
-  // Subject options
-  const availableSubjects = Array.from(new Set(homeworks.map(h => h.subject)));
-
-  // Filter & Sort for Main View
-  const filteredMainHomeworks = mainRemainingList.filter((hw) => {
-    if (filters.searchQuery) {
-      const q = filters.searchQuery.toLowerCase();
-      const matchSubject = hw.subject.toLowerCase().includes(q);
-      const matchDesc = hw.description.toLowerCase().includes(q);
-      if (!matchSubject && !matchDesc) return false;
+  const handleDeleteHomework = async (id: string) => {
+    if (!userProfile) return;
+    if (confirm('คุณต้องการลบการบ้านนี้ใช่หรือไม่?')) {
+      await deleteHomeworkFromCloud(userProfile.uid, id);
     }
+  };
 
-    if (filters.subject && hw.subject !== filters.subject) return false;
-    if (filters.workType !== 'all' && hw.workType !== filters.workType) return false;
-
-    if (filters.dueDateFilter !== 'all') {
-      const hwDate = new Date(hw.dueDate);
-      const todayDate = new Date();
-      todayDate.setHours(0, 0, 0, 0);
-
-      if (filters.dueDateFilter === 'today') {
-        const isToday = hwDate.toDateString() === todayDate.toDateString();
-        if (!isToday) return false;
-      } else if (filters.dueDateFilter === 'this_week') {
-        const endOfWeek = new Date(todayDate);
-        endOfWeek.setDate(todayDate.getDate() + 7);
-        if (hwDate < todayDate || hwDate > endOfWeek) return false;
-      } else if (filters.dueDateFilter === 'this_month') {
-        if (hwDate.getMonth() !== todayDate.getMonth() || hwDate.getFullYear() !== todayDate.getFullYear()) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }).sort((a, b) => {
-    if (filters.sortBy === 'dueDate_asc') {
-      return a.dueDate.localeCompare(b.dueDate);
-    } else if (filters.sortBy === 'dueDate_desc') {
-      return b.dueDate.localeCompare(a.dueDate);
-    } else if (filters.sortBy === 'progress_desc') {
-      return b.progress - a.progress;
-    } else if (filters.sortBy === 'progress_asc') {
-      return a.progress - b.progress;
-    } else if (filters.sortBy === 'subject') {
-      return a.subject.localeCompare(b.subject, 'th');
-    }
-    return 0;
-  });
-
-  // Handlers
   const handleUpdateProgress = async (id: string, newProgress: number) => {
     if (!userProfile) return;
-    const isDone = newProgress === 100;
     const target = homeworks.find(h => h.id === id);
     if (!target) return;
 
     const updated: Homework = {
       ...target,
       progress: newProgress,
-      completed: isDone,
-      completedAt: isDone ? new Date().toISOString() : undefined,
+      completed: newProgress === 100 ? true : (newProgress < 100 && target.completed ? false : target.completed),
     };
 
-    setHomeworks(prev => prev.map(hw => (hw.id === id ? updated : hw)));
-
-    if (selectedDetailHomework && selectedDetailHomework.id === id) {
-      setSelectedDetailHomework(updated);
-    }
-
-    try {
-      await saveHomeworkToCloud(userProfile.uid, updated);
-    } catch (err) {
-      console.error('Error saving progress to cloud:', err);
-    }
+    await saveHomeworkToCloud(userProfile.uid, updated);
   };
 
   const handleToggleComplete = async (id: string) => {
@@ -291,111 +227,44 @@ export default function App() {
     const target = homeworks.find(h => h.id === id);
     if (!target) return;
 
-    const willComplete = !target.completed;
+    const newCompleted = !target.completed;
     const updated: Homework = {
       ...target,
-      completed: willComplete,
-      progress: willComplete ? 100 : (target.progress === 100 ? 50 : target.progress),
-      completedAt: willComplete ? new Date().toISOString() : undefined,
+      completed: newCompleted,
+      progress: newCompleted ? 100 : (target.progress === 100 ? 0 : target.progress),
     };
 
-    setHomeworks(prev => prev.map(hw => (hw.id === id ? updated : hw)));
-
-    if (selectedDetailHomework && selectedDetailHomework.id === id) {
-      setSelectedDetailHomework(updated);
-    }
-
-    try {
-      await saveHomeworkToCloud(userProfile.uid, updated);
-    } catch (err) {
-      console.error('Error toggling complete in cloud:', err);
-    }
+    await saveHomeworkToCloud(userProfile.uid, updated);
   };
 
-  const handleSaveHomework = async (data: Omit<Homework, 'id' | 'createdAt'>, existingId?: string) => {
-    if (!userProfile) return;
-    let savedHomework: Homework;
-
-    if (existingId) {
-      const existing = homeworks.find(h => h.id === existingId);
-      savedHomework = {
-        ...data,
-        id: existingId,
-        createdAt: existing ? existing.createdAt : new Date().toISOString(),
-      };
-      setHomeworks(prev => prev.map(hw => (hw.id === existingId ? savedHomework : hw)));
-    } else {
-      savedHomework = {
-        ...data,
-        id: `hw-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-      };
-      setHomeworks(prev => [savedHomework, ...prev]);
-    }
-
-    setEditingHomework(null);
-    setActiveTab('main');
-
-    try {
-      await saveHomeworkToCloud(userProfile.uid, savedHomework);
-    } catch (err) {
-      console.error('Error saving homework to cloud:', err);
-    }
+  const handleEditHomeworkClick = (hw: Homework) => {
+    setEditingHomework(hw);
+    setActiveTab('add');
   };
 
-  const handleDeleteHomework = async (id: string) => {
+  // Event Handlers
+  const handleSaveEvent = async (eventData: Omit<CalendarEvent, 'id'>, id?: string) => {
     if (!userProfile) return;
-    if (confirm('คุณต้องการลบการบ้านรายการนี้ใช่หรือไม่?')) {
-      setHomeworks(prev => prev.filter(hw => hw.id !== id));
-      if (selectedDetailHomework?.id === id) {
-        setSelectedDetailHomework(null);
-      }
-
-      try {
-        await deleteHomeworkFromCloud(userProfile.uid, id);
-      } catch (err) {
-        console.error('Error deleting homework from cloud:', err);
-      }
-    }
-  };
-
-  const handleSaveEvent = async (eventData: Omit<CalendarEvent, 'id'>, existingId?: string) => {
-    if (!userProfile) return;
-    let savedEvent: CalendarEvent;
-
-    if (existingId) {
-      savedEvent = {
-        ...eventData,
-        id: existingId,
-      };
-      setEvents(prev => prev.map(e => (e.id === existingId ? savedEvent : e)));
-    } else {
-      savedEvent = {
-        ...eventData,
-        id: `evt-${Date.now()}`,
-      };
-      setEvents(prev => [...prev, savedEvent]);
-    }
-
+    const eventItem: CalendarEvent = {
+      ...eventData,
+      id: id || Date.now().toString(),
+    };
+    await saveEventToCloud(userProfile.uid, eventItem);
+    setIsAddEventOpen(false);
     setEditingEvent(null);
-
-    try {
-      await saveEventToCloud(userProfile.uid, savedEvent);
-    } catch (err) {
-      console.error('Error saving event to cloud:', err);
-    }
   };
 
   const handleDeleteEvent = async (id: string) => {
     if (!userProfile) return;
     if (confirm('คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?')) {
-      setEvents(prev => prev.filter(e => e.id !== id));
-      try {
-        await deleteEventFromCloud(userProfile.uid, id);
-      } catch (err) {
-        console.error('Error deleting event from cloud:', err);
-      }
+      await deleteEventFromCloud(userProfile.uid, id);
     }
+  };
+
+  const handleOpenAddEventModal = (dateStr?: string) => {
+    setEventInitialDate(dateStr);
+    setEditingEvent(null);
+    setIsAddEventOpen(true);
   };
 
   const handleEditEventClick = (event: CalendarEvent) => {
@@ -404,34 +273,109 @@ export default function App() {
     setIsAddEventOpen(true);
   };
 
-  const handleOpenAddEventModal = (dateStr?: string) => {
-    setEditingEvent(null);
-    setEventInitialDate(dateStr);
-    setIsAddEventOpen(true);
-  };
+  // List calculations
+  const today = new Date().toISOString().split('T')[0];
 
-  const handleEditHomeworkClick = (homework: Homework) => {
-    setEditingHomework(homework);
-    setActiveTab('add');
-  };
+  const mainRemainingList = homeworks.filter(h => !h.completed && h.progress < 100);
+  const completedList = homeworks.filter(h => h.completed || h.progress === 100);
+  const overdueList = homeworks.filter(h => !h.completed && h.progress < 100 && h.dueDate < today);
+
+  // Available subjects for filtering
+  const availableSubjects = Array.from(new Set(homeworks.map(h => h.subject))).filter(Boolean);
+
+  // Filtered and Sorted Main list
+  const filteredMainHomeworks = mainRemainingList.filter(hw => {
+    if (filters.searchQuery) {
+      const q = filters.searchQuery.toLowerCase();
+      const matchSubject = hw.subject.toLowerCase().includes(q);
+      const matchDesc = hw.description.toLowerCase().includes(q);
+      const matchTitle = hw.title ? hw.title.toLowerCase().includes(q) : false;
+      if (!matchSubject && !matchDesc && !matchTitle) return false;
+    }
+
+    if (filters.subject && hw.subject !== filters.subject) return false;
+    if (filters.workType !== 'all' && hw.workType !== filters.workType) return false;
+
+    if (filters.dueDateFilter !== 'all') {
+      const hwDue = hw.dueDate;
+      const now = new Date();
+      if (filters.dueDateFilter === 'today') {
+        if (hwDue !== today) return false;
+      } else if (filters.dueDateFilter === 'this_week') {
+        const next7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        if (hwDue < today || hwDue > next7Days) return false;
+      } else if (filters.dueDateFilter === 'this_month') {
+        const currentMonth = now.toISOString().slice(0, 7);
+        if (!hwDue.startsWith(currentMonth)) return false;
+      }
+    }
+
+    return true;
+  }).sort((a, b) => {
+    if (filters.sortBy === 'dueDate_asc') {
+      return a.dueDate.localeCompare(b.dueDate);
+    }
+    if (filters.sortBy === 'dueDate_desc') {
+      return b.dueDate.localeCompare(a.dueDate);
+    }
+    if (filters.sortBy === 'progress_asc') {
+      return a.progress - b.progress;
+    }
+    if (filters.sortBy === 'progress_desc') {
+      return b.progress - a.progress;
+    }
+    if (filters.sortBy === 'subject') {
+      return a.subject.localeCompare(b.subject);
+    }
+    return 0;
+  });
+
+  // Auth checking screen
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <Loader2 className="w-10 h-10 text-sky-600 animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-slate-600 font-heading">
+            กำลังโหลดข้อมูลระบบ...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in -> Show Authentication Screen
+  if (!userProfile) {
+    return (
+      <div className="relative min-h-screen bg-slate-50">
+        <ThemeBackgroundDecoration 
+          currentTheme={currentTheme} 
+          showFloatingIcons={showFloatingIcons} 
+        />
+        <AuthScreen 
+          onSuccess={(profile) => setUserProfile(profile)} 
+          siteSettings={siteSettings}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white pb-10 relative">
-      {/* Dynamic Theme Background Watermark Icons & Glow */}
-      {showFloatingIcons && <ThemeBackgroundDecoration currentTheme={currentTheme} />}
-
-      {/* PR Entry Pop up Modal */}
-      <PRPopupModal
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        siteSettings={siteSettings}
+    <div className="min-h-screen flex flex-col bg-slate-50/70 text-slate-900 transition-colors relative selection:bg-sky-500 selection:text-white">
+      {/* Background Floating/Theme Animation Particles */}
+      <ThemeBackgroundDecoration 
+        currentTheme={currentTheme} 
+        showFloatingIcons={showFloatingIcons} 
       />
 
-      {/* Header Bar */}
+      {/* Global PR Popup Modal (Configured from Admin settings) */}
+      <PRPopupModal siteSettings={siteSettings} />
+
+      {/* Global Application Header */}
       <Header
         activeTab={activeTab}
         setActiveTab={(tab) => {
-          if (tab !== 'add') setEditingHomework(null);
+          if (tab === 'add') setEditingHomework(null);
           setActiveTab(tab);
         }}
         remainingCount={mainRemainingList.length}
@@ -445,7 +389,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Tab: Main View */}
         {activeTab === 'main' && (
           <div className="space-y-6">
@@ -456,12 +400,16 @@ export default function App() {
               onTabSelect={(tab) => setActiveTab(tab)}
             />
 
-            {/* Filters */}
+            {/* Filters & Quick Add */}
             <HomeworkFilters
               filters={filters}
               setFilters={setFilters}
               availableSubjects={availableSubjects}
               totalResults={filteredMainHomeworks.length}
+              onAddNewHomework={() => {
+                setEditingHomework(null);
+                setActiveTab('add');
+              }}
             />
 
             {/* Cards Grid */}
@@ -485,8 +433,11 @@ export default function App() {
                     : 'ลองปรับเปลี่ยนคำค้นหาหรือล้างตัวกรองเพื่อดูรายการทั้งหมด'}
                 </p>
                 <button
-                  onClick={() => setActiveTab('add')}
-                  className="mt-5 px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold font-heading text-xs shadow-md shadow-sky-600/20 inline-flex items-center space-x-2 cursor-pointer transition-all"
+                  onClick={() => {
+                    setEditingHomework(null);
+                    setActiveTab('add');
+                  }}
+                  className="mt-5 px-6 py-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-xl font-bold font-heading text-xs shadow-md shadow-sky-600/20 inline-flex items-center space-x-2 cursor-pointer transition-all hover:scale-105"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>+ เพิ่มการบ้านใหม่</span>
@@ -513,26 +464,26 @@ export default function App() {
         {/* Tab: PR News View */}
         {activeTab === 'news' && (
           <PRNewsView
-            newsList={prNewsList}
+            newsList={newsList}
             userProfile={userProfile}
-            onAddNews={handleAddPRNews}
+            onAddNews={handleAddNews}
             onDeleteNews={handleDeletePRNews}
           />
         )}
 
-        {/* Tab: Admin Backoffice View (Strictly for Admins) */}
-        {activeTab === 'admin' && userProfile.role === 'admin' && (
+        {/* Tab: Admin Backoffice */}
+        {activeTab === 'admin' && userProfile?.role === 'admin' && (
           <AdminBackofficeView
             userProfile={userProfile}
             siteSettings={siteSettings}
             onSaveSettings={handleSaveSiteSettings}
-            newsList={prNewsList}
-            onAddNews={handleAddPRNews}
+            newsList={newsList}
+            onAddNews={handleAddNews}
             onDeleteNews={handleDeletePRNews}
           />
         )}
 
-        {/* Tab: Completed Homework */}
+        {/* Tab: Completed Homework List */}
         {activeTab === 'completed' && (
           <CompletedHomeworkView
             homeworks={homeworks}
@@ -545,7 +496,7 @@ export default function App() {
           />
         )}
 
-        {/* Tab: Overdue Homework */}
+        {/* Tab: Overdue Homework List */}
         {activeTab === 'overdue' && (
           <OverdueHomeworkView
             homeworks={homeworks}
@@ -583,6 +534,21 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Global Floating Action Button (FAB) for Instant Access to Add Homework on all devices */}
+      {activeTab !== 'add' && (
+        <button
+          onClick={() => {
+            setEditingHomework(null);
+            setActiveTab('add');
+          }}
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center space-x-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-xl shadow-sky-600/30 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer font-heading font-bold text-xs sm:text-sm border border-white/20"
+          title="เพิ่มการบ้านใหม่"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="tracking-wide">เพิ่มการบ้าน</span>
+        </button>
+      )}
 
       {/* Global Site Footer */}
       <Footer siteSettings={siteSettings} />
