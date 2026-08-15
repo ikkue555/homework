@@ -18,10 +18,12 @@ import {
   Sparkles,
   Upload,
   X,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 import { getAllRegisteredUsers } from '../lib/firebase';
 import { compressImageFile } from '../lib/imageUtils';
+import { PRPopupModal } from './PRPopupModal';
 
 interface AdminBackofficeViewProps {
   userProfile: UserProfile;
@@ -46,6 +48,7 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isPreviewPopupOpen, setIsPreviewPopupOpen] = useState(false);
 
   // User list state
   const [usersList, setUsersList] = useState<UserProfile[]>([]);
@@ -774,11 +777,19 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
             )}
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setIsPreviewPopupOpen(true)}
+              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold font-heading inline-flex items-center justify-center space-x-2 cursor-pointer transition-all border border-slate-300"
+            >
+              <Eye className="w-4 h-4 text-sky-600" />
+              <span>ทดสอบดูตัวอย่าง Pop up (Live Preview)</span>
+            </button>
             <button
               type="submit"
               disabled={saving || uploadingImage}
-              className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold font-heading shadow-md shadow-sky-600/20 inline-flex items-center space-x-2 cursor-pointer transition-all"
+              className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold font-heading shadow-md shadow-sky-600/20 inline-flex items-center justify-center space-x-2 cursor-pointer transition-all"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'กำลังบันทึก...' : 'บันทึก Pop up และซิงค์ทุกเครื่อง'}</span>
@@ -905,6 +916,16 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
           )}
         </div>
       )}
+
+      {/* Admin Live Preview PR Popup Modal */}
+      <PRPopupModal
+        isOpen={isPreviewPopupOpen}
+        onClose={() => setIsPreviewPopupOpen(false)}
+        siteSettings={{
+          ...formData,
+          popupEnabled: true // Force enable in preview
+        }}
+      />
     </div>
   );
 };

@@ -27,7 +27,7 @@ const CURRENT_USER_SESSION_KEY = 'hw_app_current_user_session_v1';
  * Sanitize username/email for document ID in Firestore
  */
 export function sanitizeUserKey(emailOrUsername: string): string {
-  const normalized = emailOrUsername.trim().toLowerCase();
+  const normalized = (emailOrUsername || '').trim().toLowerCase();
   // Safe hex encoding for full UTF-8 / Thai / Latin characters without doc ID collisions
   try {
     const hex = Array.from(new TextEncoder().encode(normalized))
@@ -44,7 +44,7 @@ export function sanitizeUserKey(emailOrUsername: string): string {
  * Legacy key for backward compatibility check
  */
 export function legacyUserKey(emailOrUsername: string): string {
-  const clean = emailOrUsername.trim().toLowerCase().replace(/[^a-z0-9_@.-]/g, '_');
+  const clean = (emailOrUsername || '').trim().toLowerCase().replace(/[^a-z0-9_@.-]/g, '_');
   return `usr_${clean}`;
 }
 
@@ -338,8 +338,9 @@ export function subscribeToUserEvents(
  */
 export async function saveHomeworkToCloud(userId: string, homework: Homework): Promise<void> {
   if (!userId) return;
-  const docRef = doc(db, 'users', userId, 'homeworks', homework.id);
-  const payload: Record<string, any> = { ...homework };
+  const hwId = homework.id || Date.now().toString();
+  const docRef = doc(db, 'users', userId, 'homeworks', hwId);
+  const payload: Record<string, any> = { ...homework, id: hwId };
   Object.keys(payload).forEach((key) => {
     if (payload[key] === undefined) {
       delete payload[key];

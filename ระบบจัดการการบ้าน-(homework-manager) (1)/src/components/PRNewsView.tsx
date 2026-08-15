@@ -21,13 +21,15 @@ interface PRNewsViewProps {
   userProfile: UserProfile | null;
   onAddNews: (news: Omit<PRNewsItem, 'id' | 'createdAt' | 'authorName'>) => Promise<void>;
   onDeleteNews: (id: string) => Promise<void>;
+  onOpenPRPopup?: () => void;
 }
 
 export const PRNewsView: React.FC<PRNewsViewProps> = ({
   newsList,
   userProfile,
   onAddNews,
-  onDeleteNews
+  onDeleteNews,
+  onOpenPRPopup,
 }) => {
   const isAdmin = userProfile?.role === 'admin';
 
@@ -47,12 +49,13 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
 
   const categories = ['ทั้งหมด', 'ประกาศสำคัญ', 'กิจกรรมโรงเรียน', 'การเรียนการสอน', 'ทั่วไป'];
 
-  const filteredNews = newsList.filter((item) => {
+  const filteredNews = (newsList || []).filter((item) => {
+    if (!item) return false;
     if (selectedCategory !== 'ทั้งหมด' && item.category !== selectedCategory) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      const matchTitle = item.title.toLowerCase().includes(q);
-      const matchContent = item.content.toLowerCase().includes(q);
+      const matchTitle = (item.title || '').toLowerCase().includes(q);
+      const matchContent = (item.content || '').toLowerCase().includes(q);
       if (!matchTitle && !matchContent) return false;
     }
     return true;
@@ -126,16 +129,29 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
           </div>
         </div>
 
-        {/* Admin Action Button */}
-        {isAdmin && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full md:w-auto px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-medium text-xs shadow-xs inline-flex items-center justify-center space-x-2 transition-all cursor-pointer"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>+ เพิ่มข่าวประชาสัมพันธ์ (แอดมิน)</span>
-          </button>
-        )}
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
+          {onOpenPRPopup && (
+            <button
+              onClick={onOpenPRPopup}
+              className="flex-1 md:flex-initial px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-2xl font-bold text-xs shadow-2xs inline-flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+              title="เปิดดูหน้าต่างประชาสัมพันธ์แบบ Pop-up"
+            >
+              <Megaphone className="w-3.5 h-3.5 text-sky-600" />
+              <span>เปิดดูประกาศ (Pop-up)</span>
+            </button>
+          )}
+
+          {isAdmin && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 md:flex-initial px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-medium text-xs shadow-xs inline-flex items-center justify-center space-x-2 transition-all cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>+ เพิ่มข่าว (แอดมิน)</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter and Search Bar */}

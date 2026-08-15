@@ -24,7 +24,9 @@ export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
   onBackToMain,
 }) => {
   const today = new Date().toISOString().split('T')[0];
-  const overdueHomeworks = homeworks.filter(h => !h.completed && h.progress < 100 && h.dueDate < today);
+  const overdueHomeworks = (homeworks || []).filter(
+    h => h && !h.completed && (h.progress || 0) < 100 && h.dueDate && h.dueDate < today && h.dueDate !== 'ไม่มีกำหนดส่ง'
+  );
 
   const [filters, setFilters] = useState({
     searchQuery: '',
@@ -35,15 +37,18 @@ export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
     sortBy: 'dueDate_asc' as const,
   });
 
-  const availableSubjects = Array.from(new Set(overdueHomeworks.map(h => h.subject)));
+  const availableSubjects = Array.from(new Set(overdueHomeworks.map(h => h.subject).filter(Boolean))) as string[];
 
   // Filter & Sort
   const filtered = overdueHomeworks.filter((hw) => {
+    if (!hw) return false;
+
     if (filters.searchQuery) {
       const q = filters.searchQuery.toLowerCase();
-      const matchSubject = hw.subject.toLowerCase().includes(q);
-      const matchDesc = hw.description.toLowerCase().includes(q);
-      if (!matchSubject && !matchDesc) return false;
+      const matchSubject = (hw.subject || '').toLowerCase().includes(q);
+      const matchDesc = (hw.description || '').toLowerCase().includes(q);
+      const matchTitle = (hw.title || '').toLowerCase().includes(q);
+      if (!matchSubject && !matchDesc && !matchTitle) return false;
     }
 
     if (filters.subject && hw.subject !== filters.subject) return false;

@@ -1,15 +1,4 @@
-export type ThemeId = 'orange' | 'kiwi' | 'panda' | 'flamingo' | 'jungle' | 'crimson' | 'sky';
-
-export interface ThemeConfig {
-  id: ThemeId;
-  name: string;
-  category: 'fruit' | 'animal' | 'special' | 'classic';
-  symbol: string;
-  tagline: string;
-  badgeBg: string;
-  badgeText: string;
-  previewColors: string[];
-}
+export type ThemeMode = 'light' | 'dark';
 
 export type WorkType = 'เดี่ยว' | 'กลุ่ม';
 

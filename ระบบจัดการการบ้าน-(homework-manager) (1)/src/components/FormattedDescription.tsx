@@ -7,7 +7,7 @@ interface FormattedDescriptionProps {
 }
 
 export const FormattedDescription: React.FC<FormattedDescriptionProps> = ({ text, className = '' }) => {
-  if (!text) return null;
+  if (!text || typeof text !== 'string') return null;
 
   const lines = text.split('\n');
 

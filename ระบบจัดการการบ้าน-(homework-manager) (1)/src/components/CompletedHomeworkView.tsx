@@ -23,7 +23,7 @@ export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
   onViewDetail,
   onBackToMain,
 }) => {
-  const completedHomeworks = homeworks.filter(h => h.completed || h.progress === 100);
+  const completedHomeworks = (homeworks || []).filter(h => h && (h.completed || h.progress === 100));
 
   const [filters, setFilters] = useState({
     searchQuery: '',
@@ -34,16 +34,19 @@ export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
     sortBy: 'dueDate_desc' as const,
   });
 
-  const availableSubjects = Array.from(new Set(completedHomeworks.map(h => h.subject)));
+  const availableSubjects = Array.from(new Set(completedHomeworks.map(h => h.subject).filter(Boolean))) as string[];
 
   // Filter & Sort
   const filtered = completedHomeworks.filter((hw) => {
+    if (!hw) return false;
+
     // Search query
     if (filters.searchQuery) {
       const q = filters.searchQuery.toLowerCase();
-      const matchSubject = hw.subject.toLowerCase().includes(q);
-      const matchDesc = hw.description.toLowerCase().includes(q);
-      if (!matchSubject && !matchDesc) return false;
+      const matchSubject = (hw.subject || '').toLowerCase().includes(q);
+      const matchDesc = (hw.description || '').toLowerCase().includes(q);
+      const matchTitle = (hw.title || '').toLowerCase().includes(q);
+      if (!matchSubject && !matchDesc && !matchTitle) return false;
     }
 
     // Subject

@@ -1,685 +1,205 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Kanit', sans-serif;
+  --font-heading: 'Kanit', sans-serif;
+}
+
 @layer base {
-  :root {
-    --font-heading: 'Kanit', sans-serif;
-    --font-body: 'Kanit', sans-serif;
-
-    /* 🩵 ฟ้าคลาสสิก (Classic Sky) */
-    --bg-main: #f8fafc;
-    --bg-card: #ffffff;
-    --bg-header: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #334155;
-    --text-header: #0369a1;
-    --primary-color: #0284c7;
-    --primary-hover: #0369a1;
-    --primary-light: #e0f2fe;
-    --text-on-light: #0369a1;
-    --accent-color: #0d9488;
-    --accent-light: #ccfbf1;
-    --border-color: #cbd5e1;
-    --card-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.08);
-    --theme-symbol: '🩵';
+  *, *::before, *::after {
+    border-color: #e2e8f0;
+    font-family: 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+  
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
   }
 
-  /* 🍊 ธีมส้ม (Orange Citrus) */
-  [data-theme="orange"] {
-    --bg-main: #fff7ed;
-    --bg-card: #ffffff;
-    --bg-header: #fffaf5;
-    --text-primary: #431407;
-    --text-secondary: #7c2d12;
-    --text-header: #c2410c;
-    --primary-color: #ea580c;
-    --primary-hover: #c2410c;
-    --primary-light: #ffedd5;
-    --text-on-light: #9a3412;
-    --accent-color: #16a34a;
-    --accent-light: #dcfce7;
-    --border-color: #fdba74;
-    --card-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.12);
-    --theme-symbol: '🍊';
+  html.dark {
+    color-scheme: dark;
   }
 
-  /* 🥝 ธีมกีวี่ (Kiwi Green) */
-  [data-theme="kiwi"] {
-    --bg-main: #f7fcf6;
-    --bg-card: #ffffff;
-    --bg-header: #f0fdf4;
-    --text-primary: #14361e;
-    --text-secondary: #2d4a19;
-    --text-header: #3f6212;
-    --primary-color: #65a30d;
-    --primary-hover: #4d7c0f;
-    --primary-light: #ecfccb;
-    --text-on-light: #365314;
-    --accent-color: #b45309;
-    --accent-light: #fef3c7;
-    --border-color: #bef264;
-    --card-shadow: 0 10px 25px -5px rgba(101, 163, 13, 0.12);
-    --theme-symbol: '🥝';
+  html.dark *, html.dark *::before, html.dark *::after {
+    border-color: #334155;
   }
-
-  /* 🐼 ธีมแพนด้า (Minimal Panda) */
-  [data-theme="panda"] {
-    --bg-main: #f1f5f9;
-    --bg-card: #ffffff;
-    --bg-header: #0f172a;
-    --text-primary: #0f172a;
-    --text-secondary: #334155;
-    --text-header: #ffffff;
-    --primary-color: #0f172a;
-    --primary-hover: #1e293b;
-    --primary-light: #e2e8f0;
-    --text-on-light: #0f172a;
-    --accent-color: #15803d;
-    --accent-light: #dcfce7;
-    --border-color: #cbd5e1;
-    --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
-    --theme-symbol: '🐼';
-  }
-
-  /* 🦩 ธีมฟลามิงโก้ (Pink Flamingo) */
-  [data-theme="flamingo"] {
-    --bg-main: #fff5f8;
-    --bg-card: #ffffff;
-    --bg-header: #fdf2f8;
-    --text-primary: #500724;
-    --text-secondary: #831843;
-    --text-header: #be185d;
-    --primary-color: #db2777;
-    --primary-hover: #be185d;
-    --primary-light: #fce7f3;
-    --text-on-light: #831843;
-    --accent-color: #0284c7;
-    --accent-light: #e0f2fe;
-    --border-color: #f472b6;
-    --card-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.12);
-    --theme-symbol: '🦩';
-  }
-
-  /* 🌿 ธีมกินพืช (Plant Eater / Jungle) */
-  [data-theme="jungle"] {
-    --bg-main: #f0fdf4;
-    --bg-card: #ffffff;
-    --bg-header: #064e3b;
-    --text-primary: #022c22;
-    --text-secondary: #065f46;
-    --text-header: #ffffff;
-    --primary-color: #059669;
-    --primary-hover: #047857;
-    --primary-light: #d1fae5;
-    --text-on-light: #065f46;
-    --accent-color: #d97706;
-    --accent-light: #fef3c7;
-    --border-color: #6ee7b7;
-    --card-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.14);
-    --theme-symbol: '🌿';
-  }
-
-  /* 🦖 ธีมกินเนื้อ (Meat Eater / Crimson) */
-  [data-theme="crimson"] {
-    --bg-main: #fef2f2;
-    --bg-card: #ffffff;
-    --bg-header: #450a0a;
-    --text-primary: #450a0a;
-    --text-secondary: #7f1d1d;
-    --text-header: #ffffff;
-    --primary-color: #dc2626;
-    --primary-hover: #b91c1c;
-    --primary-light: #fee2e2;
-    --text-on-light: #991b1b;
-    --accent-color: #92400e;
-    --accent-light: #fef3c7;
-    --border-color: #f87171;
-    --card-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.15);
-    --theme-symbol: '🦖';
-  }
-
-  * {
-    font-family: 'Kanit', sans-serif;
-  }
-
-  body {
-    font-family: 'Kanit', sans-serif;
-    background-color: var(--bg-main) !important;
-    color: var(--text-primary) !important;
+  
+  html, body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  h1, h2, h3, h4, h5, h6, .font-heading {
-    font-family: 'Kanit', sans-serif;
+  html.dark body {
+    background-color: #090d16;
+    color: #f1f5f9;
   }
 
-  input, button, select, textarea {
-    font-family: 'Kanit', sans-serif;
+  h1, h2, h3, h4, h5, h6, p, span, button, input, textarea, select {
+    font-family: 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+
+  /* Universal button & interactive base styling */
+  button {
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* INTERACTIVE MICRO-ANIMATIONS & HOVER / CLICK EFFECTS */
-button, 
-a, 
-input[type="submit"], 
-input[type="button"], 
-.interactive-btn {
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              box-shadow 0.2s ease, 
-              background-color 0.2s ease, 
-              border-color 0.2s ease,
-              opacity 0.15s ease;
+.font-heading {
+  font-family: 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
-button:hover:not(:disabled), 
-a:hover, 
-.interactive-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
 }
 
-button:active:not(:disabled), 
-a:active, 
-.interactive-btn:active:not(:disabled) {
-  transform: translateY(1px) scale(0.95) !important;
-  transition-duration: 0.08s !important;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* Card Lift & Interactive Glow Effects */
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0284c7;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+/* Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Interactive Button Hover & Tactile Press */
+.btn-interactive {
+  transition: transform 0.15s ease, 
+              background-color 0.15s ease, 
+              border-color 0.15s ease, 
+              box-shadow 0.15s ease,
+              color 0.15s ease;
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .btn-interactive:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-interactive-subtle:hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* Tactile button depress when pressed (clean scale-down, no extra effects) */
+.btn-interactive:active,
+.btn-interactive-subtle:active,
+button:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.06s ease-out !important;
+}
+
+/* Card interactive touch & hover */
 .card-interactive {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.25s ease, 
-              border-color 0.25s ease;
+  transition: transform 0.2s ease, 
+              box-shadow 0.2s ease, 
+              border-color 0.15s ease;
+  will-change: transform;
 }
 
-.card-interactive:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 32px -8px rgba(2, 132, 199, 0.15), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+@media (hover: hover) {
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.07), 0 4px 8px -4px rgba(0, 0, 0, 0.03);
+  }
+  
+  html.dark .card-interactive:hover {
+    box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.4), 0 4px 8px -4px rgba(0, 0, 0, 0.3);
+  }
 }
 
-/* Shimmer Light Effect on Hover */
-@keyframes shimmerPass {
+.card-interactive:active {
+  transform: scale(0.99);
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popIn {
   0% {
-    background-position: -200% 0;
+    opacity: 0;
+    transform: scale(0.9);
   }
   100% {
-    background-position: 200% 0;
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-.btn-shimmer {
-  background-size: 200% 100%;
-  transition: background-position 0.5s ease;
-}
-
-.btn-shimmer:hover {
-  background-position: right center;
-}
-
-/* Pulsing Badge & Icon Effects */
-@keyframes pulseGlow {
+@keyframes floatGentle {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.4);
+    transform: translateY(0px);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(2, 132, 199, 0);
+    transform: translateY(-3px);
   }
 }
 
-.pulse-glow {
-  animation: pulseGlow 2s infinite;
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* OVERRIDE UTILITIES FOR HIGH READABILITY & CONTRAST */
-[data-theme] body {
-  background-color: var(--bg-main) !important;
-  color: var(--text-primary) !important;
+.animate-scaleUp {
+  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* High contrast text rules for clear legibility */
-.text-slate-400 {
-  color: #64748b !important;
+.animate-pop {
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.text-slate-500 {
-  color: #334155 !important;
+.animate-float {
+  animation: floatGentle 3s ease-in-out infinite;
 }
-
-.text-slate-600 {
-  color: #1e293b !important;
-}
-
-.text-slate-700,
-.text-slate-800,
-.text-slate-900 {
-  color: #0f172a !important;
-}
-
-/* Inputs, Selects & Placeholders */
-input, select, textarea {
-  color: #0f172a !important;
-}
-
-input::placeholder, textarea::placeholder {
-  color: #64748b !important;
-  opacity: 1 !important;
-}
-
-select option {
-  color: #0f172a !important;
-  background-color: #ffffff !important;
-}
-
-/* Header theme customization */
-[data-theme] header {
-  background-color: var(--bg-header) !important;
-  border-bottom-color: var(--border-color) !important;
-}
-
-[data-theme] header h1 {
-  color: var(--text-header) !important;
-}
-
-/* Dark Headers (Panda, Jungle, Crimson) Styling Rules */
-[data-theme="panda"] header,
-[data-theme="jungle"] header,
-[data-theme="crimson"] header {
-  background-color: var(--bg-header) !important;
-  border-bottom-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-[data-theme="panda"] header h1,
-[data-theme="jungle"] header h1,
-[data-theme="crimson"] header h1 {
-  color: #ffffff !important;
-}
-
-[data-theme="panda"] header p,
-[data-theme="jungle"] header p,
-[data-theme="crimson"] header p {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-/* Override text-slate classes inside dark headers to stay crisp white */
-[data-theme="panda"] header .text-slate-400,
-[data-theme="jungle"] header .text-slate-400,
-[data-theme="crimson"] header .text-slate-400 {
-  color: rgba(255, 255, 255, 0.75) !important;
-}
-
-[data-theme="panda"] header .text-slate-500,
-[data-theme="jungle"] header .text-slate-500,
-[data-theme="crimson"] header .text-slate-500,
-[data-theme="panda"] header .text-slate-600,
-[data-theme="jungle"] header .text-slate-600,
-[data-theme="crimson"] header .text-slate-600,
-[data-theme="panda"] header .text-slate-700,
-[data-theme="jungle"] header .text-slate-700,
-[data-theme="crimson"] header .text-slate-700,
-[data-theme="panda"] header .text-slate-800,
-[data-theme="jungle"] header .text-slate-800,
-[data-theme="crimson"] header .text-slate-800 {
-  color: #ffffff !important;
-}
-
-/* Dark header pills & badges */
-[data-theme="panda"] header .header-pill,
-[data-theme="jungle"] header .header-pill,
-[data-theme="crimson"] header .header-pill {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
-}
-
-[data-theme="panda"] header nav button:not(.bg-sky-600),
-[data-theme="jungle"] header nav button:not(.bg-sky-600),
-[data-theme="crimson"] header nav button:not(.bg-sky-600) {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-[data-theme="panda"] header nav button:not(.bg-sky-600):hover,
-[data-theme="jungle"] header nav button:not(.bg-sky-600):hover,
-[data-theme="crimson"] header nav button:not(.bg-sky-600):hover {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-}
-
-/* Primary buttons, badges, active tabs, icons with bg-sky-600 */
-[data-theme] .bg-sky-600,
-[data-theme] .bg-sky-500 {
-  background-color: var(--primary-color) !important;
-  color: #ffffff !important;
-}
-
-[data-theme] .hover\:bg-sky-700:hover,
-[data-theme] .hover\:bg-sky-600:hover {
-  background-color: var(--primary-hover) !important;
-}
-
-[data-theme] .bg-sky-50,
-[data-theme] .bg-sky-100 {
-  background-color: var(--primary-light) !important;
-}
-
-[data-theme] .text-sky-600,
-[data-theme] .text-sky-500 {
-  color: var(--primary-color) !important;
-}
-
-/* Badges & Pills text for ultra-high contrast on light primary backgrounds */
-[data-theme] .text-sky-700,
-[data-theme] .text-sky-800 {
-  color: var(--text-on-light) !important;
-}
-
-[data-theme] .border-sky-600,
-[data-theme] .border-sky-500,
-[data-theme] .border-sky-200,
-[data-theme] .border-sky-100 {
-  border-color: var(--border-color) !important;
-}
-
-[data-theme] .ring-sky-500,
-[data-theme] .ring-sky-600,
-[data-theme] .focus\:ring-sky-500:focus,
-[data-theme] .focus\:ring-sky-600:focus {
-  --tw-ring-color: var(--primary-color) !important;
-}
-
-/* Cards & Containers */
-[data-theme] .bg-white {
-  background-color: var(--bg-card) !important;
-}
-
-[data-theme] .border-slate-200,
-[data-theme] .border-slate-100 {
-  border-color: var(--border-color) !important;
-}
-
-[data-theme] .bg-slate-50 {
-  background-color: var(--bg-main) !important;
-}
-
-/* Custom smooth scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-main);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-color);
-}
-
-/* Floating Animations for Theme Background Watermarks */
-@keyframes floatSmooth {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
-  }
-  25% {
-    transform: translateY(-20px) translateX(10px) rotate(8deg) scale(1.05);
-  }
-  50% {
-    transform: translateY(-10px) translateX(-12px) rotate(-6deg) scale(0.96);
-  }
-  75% {
-    transform: translateY(15px) translateX(8px) rotate(4deg) scale(1.03);
-  }
-}
-
-@keyframes floatReverse {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
-  }
-  33% {
-    transform: translateY(18px) translateX(-12px) rotate(-8deg) scale(0.95);
-  }
-  66% {
-    transform: translateY(-16px) translateX(10px) rotate(8deg) scale(1.04);
-  }
-}
-
-@keyframes floatDrift {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(-25px) translateX(-15px) rotate(-12deg) scale(1.08);
-  }
-}
-
-@keyframes floatSway {
-  0%, 100% {
-    transform: translateY(0px) translateX(0px) rotate(-4deg);
-  }
-  50% {
-    transform: translateY(-15px) translateX(18px) rotate(8deg);
-  }
-}
-
-.animate-float-1 {
-  animation: floatSmooth 8s ease-in-out infinite;
-}
-
-.animate-float-2 {
-  animation: floatReverse 10.5s ease-in-out infinite;
-}
-
-.animate-float-3 {
-  animation: floatDrift 13s ease-in-out infinite;
-}
-
-.animate-float-4 {
-  animation: floatSway 9.5s ease-in-out infinite;
-}
-
-/* ==========================================================================
-   MOBILE-ONLY RESPONSIVE OPTIMIZATIONS (@media max-width: 640px)
-   Focused on maximum vertical space saving, compact header, touch-friendly UI
-   ========================================================================== */
-@media (max-width: 640px) {
-  /* 1. COMPACT HEADER & TOP ROW */
-  header {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-
-  header .max-w-7xl {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-
-  /* Compact top header row (single-line layout, minimal vertical space) */
-  header .border-b {
-    padding-top: 0.35rem !important;
-    padding-bottom: 0.35rem !important;
-    gap: 0.35rem !important;
-  }
-
-  /* Compact Brand / Logo & Title */
-  header h1 {
-    font-size: 0.8125rem !important; /* 13px */
-    line-height: 1.15 !important;
-    max-width: 130px !important;
-  }
-
-  header h1 span.truncate {
-    max-width: 105px !important;
-  }
-
-  /* Logo container */
-  header .w-8.h-8,
-  header .w-9.h-9 {
-    width: 1.625rem !important;
-    height: 1.625rem !important;
-    border-radius: 0.5rem !important;
-  }
-
-  header .w-8.h-8 svg,
-  header .w-9.h-9 svg {
-    width: 0.875rem !important;
-    height: 0.875rem !important;
-  }
-
-  /* User profile badge & Logout in one tight parallel line */
-  header .header-pill {
-    padding: 0.2rem 0.4rem !important;
-    border-radius: 0.5rem !important;
-    gap: 0.25rem !important;
-  }
-
-  header .header-pill .w-6.h-6,
-  header .header-pill .w-7.h-7 {
-    width: 1.25rem !important;
-    height: 1.25rem !important;
-    font-size: 0.625rem !important;
-    border-radius: 0.375rem !important;
-  }
-
-  header .header-pill span.truncate {
-    max-width: 55px !important;
-    font-size: 0.6875rem !important;
-  }
-
-  /* Compact action buttons in header (Theme, Logout, Add) */
-  header button {
-    padding: 0.25rem 0.45rem !important;
-    font-size: 0.6875rem !important;
-    border-radius: 0.5rem !important;
-    height: 1.75rem !important;
-  }
-
-  header button svg {
-    width: 0.75rem !important;
-    height: 0.75rem !important;
-  }
-
-  /* 2. NAVIGATION BAR (Clean, no text breaking, thumb-accessible) */
-  header nav {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
-    gap: 0.25rem !important;
-  }
-
-  header nav button {
-    padding: 0.25rem 0.5rem !important;
-    font-size: 0.6875rem !important;
-    border-radius: 0.5rem !important;
-    height: 1.875rem !important;
-    white-space: nowrap !important;
-  }
-
-  header nav button svg {
-    width: 0.75rem !important;
-    height: 0.75rem !important;
-  }
-
-  /* 3. COMPACT HOMEWORK CARDS (Vertical Space Saver) */
-  .card-interactive {
-    border-radius: 0.875rem !important;
-    margin-bottom: 0.375rem !important;
-  }
-
-  .card-interactive > div {
-    padding: 0.625rem 0.75rem !important;
-  }
-
-  /* Tags & Subject Header */
-  .card-interactive span.rounded-lg,
-  .card-interactive span.rounded-md {
-    font-size: 0.6875rem !important;
-    padding: 0.125rem 0.375rem !important;
-  }
-
-  /* Homework description text - optimized size & spacing for small screens */
-  .card-interactive .formatted-desc,
-  .card-interactive p,
-  .card-interactive .text-xs {
-    font-size: 0.75rem !important; /* 12px */
-    line-height: 1.35 !important;
-  }
-
-  /* Footer action bar of card */
-  .card-interactive .border-t {
-    padding-top: 0.375rem !important;
-    margin-top: 0.375rem !important;
-  }
-
-  /* 4. FULL-WIDTH & TOUCH-FRIENDLY CALENDAR VIEW */
-  /* Remove container restrictions on mobile */
-  .CalendarView,
-  main .lg\:col-span-2 {
-    width: 100% !important;
-    padding: 0.5rem !important;
-    border-radius: 1rem !important;
-  }
-
-  /* Weekday header cells */
-  .grid-cols-7 > div.py-2,
-  .grid-cols-7 > div {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
-    font-size: 0.6875rem !important;
-    border-radius: 0.375rem !important;
-  }
-
-  /* Square-ratio thumb-friendly day cells */
-  .grid-cols-7 > div.min-h-\[75px\],
-  .grid-cols-7 > div.min-h-\[95px\],
-  .grid-cols-7 > div.min-h-\[70px\],
-  .grid-cols-7 > div.min-h-\[90px\] {
-    min-height: 0 !important;
-    height: auto !important;
-    aspect-ratio: 1 / 1 !important;
-    padding: 0.25rem 0.15rem !important;
-    border-radius: 0.5rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    touch-action: manipulation;
-  }
-
-  /* Day number typography */
-  .grid-cols-7 span.font-extrabold {
-    font-size: 0.6875rem !important;
-    padding: 0.05rem 0.2rem !important;
-    border-radius: 0.25rem !important;
-    line-height: 1 !important;
-  }
-
-  /* Compact event dots & badges inside day cells */
-  .grid-cols-7 .space-y-0\.5,
-  .grid-cols-7 .space-y-1 {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: center !important;
-    gap: 0.125rem !important;
-    width: 100% !important;
-  }
-
-  .grid-cols-7 .space-y-0\.5 > *,
-  .grid-cols-7 .space-y-1 > * {
-    font-size: 0 !important; /* Hide long text in day cell */
-    width: 0.35rem !important;
-    height: 0.35rem !important;
-    border-radius: 9999px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Smooth momentum touch scrolling for all horizontal lists */
-  .no-scrollbar {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Add bottom padding to body on mobile to ensure bottom navigation does not overlap content */
-  body {
-    padding-bottom: 3.75rem !important;
-  }
-}
-

@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Homework, CalendarEvent, ActiveTab, HomeworkFilterState, UserProfile, SiteSettings, PRNewsItem, ThemeId } from './types';
-import { getStoredTheme, applyTheme } from './lib/themes';
+import { 
+  Homework, 
+  CalendarEvent, 
+  ActiveTab, 
+  HomeworkFilterState, 
+  UserProfile, 
+  SiteSettings, 
+  PRNewsItem, 
+  ThemeMode 
+} from './types';
+import { getInitialThemeMode, applyThemeMode } from './lib/theme';
 import { 
   getActiveSession, 
   logoutUser, 
@@ -31,9 +40,8 @@ import { AuthScreen } from './components/AuthScreen';
 import { PRNewsView } from './components/PRNewsView';
 import { AdminBackofficeView } from './components/AdminBackofficeView';
 import { PRPopupModal } from './components/PRPopupModal';
-import { ThemeSwitcherModal } from './components/ThemeSwitcherModal';
-import { ThemeBackgroundDecoration } from './components/ThemeBackgroundDecoration';
 import { Footer } from './components/Footer';
+import { ScrollInteractiveHelper } from './components/ScrollInteractiveHelper';
 import { PlusCircle, CheckCircle2, Loader2, Plus } from 'lucide-react';
 
 export default function App() {
@@ -42,7 +50,7 @@ export default function App() {
 
   // Homeworks state - populated from Firebase
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
-  const [isHomeworksLoading, setIsHomeworksLoading] = useState<boolean>(true);
+  const [, setIsHomeworksLoading] = useState<boolean>(true);
 
   // Calendar Events state - populated from Firebase
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -53,13 +61,12 @@ export default function App() {
   // Site Settings state - populated from Firebase
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
 
-  // Theme state
-  const [currentTheme, setCurrentTheme] = useState<ThemeId>(() => getStoredTheme());
-  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
-  const [showFloatingIcons, setShowFloatingIcons] = useState<boolean>(() => {
-    const saved = localStorage.getItem('theme_floating_icons');
-    return saved !== null ? saved === 'true' : true;
-  });
+  // PR Popup Modal State & Auto-open upon entering website
+  const [isPRPopupOpen, setIsPRPopupOpen] = useState(false);
+  const [hasCheckedPopup, setHasCheckedPopup] = useState(false);
+
+  // Theme mode state (Light / Dark)
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => getInitialThemeMode());
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('main');
   const [selectedDetailHomework, setSelectedDetailHomework] = useState<Homework | null>(null);
@@ -80,18 +87,13 @@ export default function App() {
     sortBy: 'dueDate_asc',
   });
 
-  // Apply Theme on load & change
+  // Apply Theme Mode on load & change
   useEffect(() => {
-    applyTheme(currentTheme);
-  }, [currentTheme]);
+    applyThemeMode(themeMode);
+  }, [themeMode]);
 
-  const handleSelectTheme = (themeId: ThemeId) => {
-    setCurrentTheme(themeId);
-  };
-
-  const handleToggleFloatingIcons = (show: boolean) => {
-    setShowFloatingIcons(show);
-    localStorage.setItem('theme_floating_icons', String(show));
+  const handleToggleThemeMode = () => {
+    setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   // Check auth session
@@ -116,6 +118,27 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Auto-open PR Popup upon entering website if enabled
+  useEffect(() => {
+    if (siteSettings && siteSettings.popupEnabled && !hasCheckedPopup) {
+      const isDismissed = sessionStorage.getItem('pr_popup_dismissed_session');
+      if (!isDismissed) {
+        // Small delay for smooth mounting
+        const timer = setTimeout(() => {
+          setIsPRPopupOpen(true);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+      setHasCheckedPopup(true);
+    }
+  }, [siteSettings, hasCheckedPopup]);
+
+  const handleClosePRPopup = () => {
+    setIsPRPopupOpen(false);
+    sessionStorage.setItem('pr_popup_dismissed_session', 'true');
+    setHasCheckedPopup(true);
+  };
 
   // Subscribe to PR News
   useEffect(() => {
@@ -194,9 +217,14 @@ export default function App() {
   };
 
   // Homework CRUD Handlers
-  const handleSaveHomework = async (savedHw: Homework) => {
+  const handleSaveHomework = async (savedHw: Omit<Homework, 'id' | 'createdAt'> & { id?: string; createdAt?: string }, existingId?: string) => {
     if (!userProfile) return;
-    await saveHomeworkToCloud(userProfile.uid, savedHw);
+    const finalHw: Homework = {
+      ...savedHw,
+      id: existingId || savedHw.id || Date.now().toString(),
+      createdAt: savedHw.createdAt || new Date().toISOString(),
+    };
+    await saveHomeworkToCloud(userProfile.uid, finalHw);
     setEditingHomework(null);
     setActiveTab('main');
   };
@@ -276,20 +304,23 @@ export default function App() {
   // List calculations
   const today = new Date().toISOString().split('T')[0];
 
-  const mainRemainingList = homeworks.filter(h => !h.completed && h.progress < 100);
-  const completedList = homeworks.filter(h => h.completed || h.progress === 100);
-  const overdueList = homeworks.filter(h => !h.completed && h.progress < 100 && h.dueDate < today);
+  const safeHomeworks = (homeworks || []).filter(Boolean);
+  const mainRemainingList = safeHomeworks.filter(h => !h.completed && (h.progress || 0) < 100);
+  const completedList = safeHomeworks.filter(h => h.completed || h.progress === 100);
+  const overdueList = safeHomeworks.filter(h => !h.completed && (h.progress || 0) < 100 && h.dueDate && h.dueDate < today && h.dueDate !== 'ไม่มีกำหนดส่ง');
 
   // Available subjects for filtering
-  const availableSubjects = Array.from(new Set(homeworks.map(h => h.subject))).filter(Boolean);
+  const availableSubjects = Array.from(new Set(safeHomeworks.map(h => h.subject).filter(Boolean))) as string[];
 
   // Filtered and Sorted Main list
   const filteredMainHomeworks = mainRemainingList.filter(hw => {
+    if (!hw) return false;
+
     if (filters.searchQuery) {
       const q = filters.searchQuery.toLowerCase();
-      const matchSubject = hw.subject.toLowerCase().includes(q);
-      const matchDesc = hw.description.toLowerCase().includes(q);
-      const matchTitle = hw.title ? hw.title.toLowerCase().includes(q) : false;
+      const matchSubject = (hw.subject || '').toLowerCase().includes(q);
+      const matchDesc = (hw.description || '').toLowerCase().includes(q);
+      const matchTitle = (hw.title || '').toLowerCase().includes(q);
       if (!matchSubject && !matchDesc && !matchTitle) return false;
     }
 
@@ -297,35 +328,35 @@ export default function App() {
     if (filters.workType !== 'all' && hw.workType !== filters.workType) return false;
 
     if (filters.dueDateFilter !== 'all') {
-      const hwDue = hw.dueDate;
+      const hwDue = hw.dueDate || '';
       const now = new Date();
       if (filters.dueDateFilter === 'today') {
         if (hwDue !== today) return false;
       } else if (filters.dueDateFilter === 'this_week') {
         const next7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        if (hwDue < today || hwDue > next7Days) return false;
+        if (!hwDue || hwDue < today || hwDue > next7Days || hwDue === 'ไม่มีกำหนดส่ง') return false;
       } else if (filters.dueDateFilter === 'this_month') {
         const currentMonth = now.toISOString().slice(0, 7);
-        if (!hwDue.startsWith(currentMonth)) return false;
+        if (!hwDue || !hwDue.startsWith(currentMonth)) return false;
       }
     }
 
     return true;
   }).sort((a, b) => {
     if (filters.sortBy === 'dueDate_asc') {
-      return a.dueDate.localeCompare(b.dueDate);
+      return (a.dueDate || '').localeCompare(b.dueDate || '');
     }
     if (filters.sortBy === 'dueDate_desc') {
-      return b.dueDate.localeCompare(a.dueDate);
+      return (b.dueDate || '').localeCompare(a.dueDate || '');
     }
     if (filters.sortBy === 'progress_asc') {
-      return a.progress - b.progress;
+      return (a.progress || 0) - (b.progress || 0);
     }
     if (filters.sortBy === 'progress_desc') {
-      return b.progress - a.progress;
+      return (b.progress || 0) - (a.progress || 0);
     }
     if (filters.sortBy === 'subject') {
-      return a.subject.localeCompare(b.subject);
+      return (a.subject || '').localeCompare(b.subject || '');
     }
     return 0;
   });
@@ -333,10 +364,10 @@ export default function App() {
   // Auth checking screen
   if (isAuthChecking) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="text-center space-y-3">
-          <Loader2 className="w-10 h-10 text-sky-600 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-600 font-heading">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 relative transition-colors">
+        <div className="text-center space-y-3 relative z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-lg animate-pop">
+          <Loader2 className="w-10 h-10 text-sky-600 dark:text-sky-400 animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 font-heading">
             กำลังโหลดข้อมูลระบบ...
           </p>
         </div>
@@ -347,31 +378,38 @@ export default function App() {
   // Not logged in -> Show Authentication Screen
   if (!userProfile) {
     return (
-      <div className="relative min-h-screen bg-slate-50">
-        <ThemeBackgroundDecoration 
-          currentTheme={currentTheme} 
-          showFloatingIcons={showFloatingIcons} 
+      <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
+        <ScrollInteractiveHelper />
+
+        {/* Global PR Popup Modal upon entering website */}
+        <PRPopupModal 
+          isOpen={isPRPopupOpen} 
+          onClose={handleClosePRPopup} 
+          siteSettings={siteSettings} 
         />
         <AuthScreen 
           onSuccess={(profile) => setUserProfile(profile)} 
           siteSettings={siteSettings}
+          themeMode={themeMode}
+          onToggleThemeMode={handleToggleThemeMode}
         />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/70 text-slate-900 transition-colors relative selection:bg-sky-500 selection:text-white">
-      {/* Background Floating/Theme Animation Particles */}
-      <ThemeBackgroundDecoration 
-        currentTheme={currentTheme} 
-        showFloatingIcons={showFloatingIcons} 
-      />
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors relative selection:bg-sky-500 selection:text-white">
+      {/* Scroll Helpers (Top Progress Bar & Smooth Scroll-To-Top) */}
+      <ScrollInteractiveHelper />
 
       {/* Global PR Popup Modal (Configured from Admin settings) */}
-      <PRPopupModal siteSettings={siteSettings} />
+      <PRPopupModal 
+        isOpen={isPRPopupOpen} 
+        onClose={handleClosePRPopup} 
+        siteSettings={siteSettings} 
+      />
 
-      {/* Global Application Header */}
+      {/* Global Application Header with Theme Mode toggle */}
       <Header
         activeTab={activeTab}
         setActiveTab={(tab) => {
@@ -383,16 +421,17 @@ export default function App() {
         overdueCount={overdueList.length}
         userProfile={userProfile}
         siteSettings={siteSettings}
-        currentTheme={currentTheme}
-        onOpenThemeSwitcher={() => setIsThemeModalOpen(true)}
+        themeMode={themeMode}
+        onToggleThemeMode={handleToggleThemeMode}
+        onOpenPRPopup={() => setIsPRPopupOpen(true)}
         onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
         {/* Tab: Main View */}
         {activeTab === 'main' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fadeIn">
             {/* Stats Summary Bar */}
             <StatsOverview
               homeworks={homeworks}
@@ -414,18 +453,18 @@ export default function App() {
 
             {/* Cards Grid */}
             {filteredMainHomeworks.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 my-8 shadow-xs">
-                <div className="w-16 h-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200/80 dark:border-slate-800 my-8 shadow-xs transition-colors animate-pop">
+                <div className="w-16 h-16 bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 rounded-3xl flex items-center justify-center mx-auto mb-3 animate-float">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold font-heading text-slate-800">
+                <h3 className="text-xl font-bold font-heading text-slate-800 dark:text-slate-100">
                   {homeworks.length === 0
                     ? (siteSettings?.emptyHomeworkTitle || 'ยังไม่มีรายการการบ้านในขณะนี้')
                     : mainRemainingList.length === 0
                     ? 'ไม่มีการบ้านค้างอยู่แล้ว!'
                     : 'ไม่พบการบ้านตรงตามตัวกรอง'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
                   {homeworks.length === 0
                     ? (siteSettings?.emptyHomeworkMessage || 'กดปุ่มเพิ่มการบ้านใหม่ด้านล่างเพื่อเริ่มบันทึกการบ้านประจำตัวของคุณ ข้อมูลจะถูกบันทึกแยกต่างหากเฉพาะบัญชีนี้')
                     : mainRemainingList.length === 0
@@ -437,9 +476,9 @@ export default function App() {
                     setEditingHomework(null);
                     setActiveTab('add');
                   }}
-                  className="mt-5 px-6 py-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-xl font-bold font-heading text-xs shadow-md shadow-sky-600/20 inline-flex items-center space-x-2 cursor-pointer transition-all hover:scale-105"
+                  className="mt-4 px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-xl font-semibold font-heading text-xs shadow-sm inline-flex items-center space-x-1.5 cursor-pointer btn-interactive"
                 >
-                  <PlusCircle className="w-4 h-4" />
+                  <PlusCircle className="w-3.5 h-3.5" />
                   <span>+ เพิ่มการบ้านใหม่</span>
                 </button>
               </div>
@@ -463,89 +502,101 @@ export default function App() {
 
         {/* Tab: PR News View */}
         {activeTab === 'news' && (
-          <PRNewsView
-            newsList={newsList}
-            userProfile={userProfile}
-            onAddNews={handleAddNews}
-            onDeleteNews={handleDeletePRNews}
-          />
+          <div className="animate-fadeIn">
+            <PRNewsView
+              newsList={newsList}
+              userProfile={userProfile}
+              onAddNews={handleAddNews}
+              onDeleteNews={handleDeletePRNews}
+              onOpenPRPopup={() => setIsPRPopupOpen(true)}
+            />
+          </div>
         )}
 
         {/* Tab: Admin Backoffice */}
         {activeTab === 'admin' && userProfile?.role === 'admin' && (
-          <AdminBackofficeView
-            userProfile={userProfile}
-            siteSettings={siteSettings}
-            onSaveSettings={handleSaveSiteSettings}
-            newsList={newsList}
-            onAddNews={handleAddNews}
-            onDeleteNews={handleDeletePRNews}
-          />
+          <div className="animate-fadeIn">
+            <AdminBackofficeView
+              userProfile={userProfile}
+              siteSettings={siteSettings}
+              onSaveSettings={handleSaveSiteSettings}
+              newsList={newsList}
+              onAddNews={handleAddNews}
+              onDeleteNews={handleDeletePRNews}
+            />
+          </div>
         )}
 
         {/* Tab: Completed Homework List */}
         {activeTab === 'completed' && (
-          <CompletedHomeworkView
-            homeworks={homeworks}
-            onUpdateProgress={handleUpdateProgress}
-            onToggleComplete={handleToggleComplete}
-            onEdit={handleEditHomeworkClick}
-            onDelete={handleDeleteHomework}
-            onViewDetail={setSelectedDetailHomework}
-            onBackToMain={() => setActiveTab('main')}
-          />
+          <div className="animate-fadeIn">
+            <CompletedHomeworkView
+              homeworks={homeworks}
+              onUpdateProgress={handleUpdateProgress}
+              onToggleComplete={handleToggleComplete}
+              onEdit={handleEditHomeworkClick}
+              onDelete={handleDeleteHomework}
+              onViewDetail={setSelectedDetailHomework}
+              onBackToMain={() => setActiveTab('main')}
+            />
+          </div>
         )}
 
         {/* Tab: Overdue Homework List */}
         {activeTab === 'overdue' && (
-          <OverdueHomeworkView
-            homeworks={homeworks}
-            onUpdateProgress={handleUpdateProgress}
-            onToggleComplete={handleToggleComplete}
-            onEdit={handleEditHomeworkClick}
-            onDelete={handleDeleteHomework}
-            onViewDetail={setSelectedDetailHomework}
-            onBackToMain={() => setActiveTab('main')}
-          />
+          <div className="animate-fadeIn">
+            <OverdueHomeworkView
+              homeworks={homeworks}
+              onUpdateProgress={handleUpdateProgress}
+              onToggleComplete={handleToggleComplete}
+              onEdit={handleEditHomeworkClick}
+              onDelete={handleDeleteHomework}
+              onViewDetail={setSelectedDetailHomework}
+              onBackToMain={() => setActiveTab('main')}
+            />
+          </div>
         )}
 
         {/* Tab: Add or Edit Homework Form */}
         {activeTab === 'add' && (
-          <AddHomeworkForm
-            onSave={handleSaveHomework}
-            onCancel={() => {
-              setEditingHomework(null);
-              setActiveTab('main');
-            }}
-            editingHomework={editingHomework}
-          />
+          <div className="animate-fadeIn">
+            <AddHomeworkForm
+              onSave={handleSaveHomework}
+              onCancel={() => {
+                setEditingHomework(null);
+                setActiveTab('main');
+              }}
+              editingHomework={editingHomework}
+            />
+          </div>
         )}
 
         {/* Tab: Calendar & Events */}
         {activeTab === 'calendar' && (
-          <CalendarView
-            homeworks={homeworks}
-            events={events}
-            onAddEventClick={handleOpenAddEventModal}
-            onHomeworkClick={setSelectedDetailHomework}
-            onEditEvent={handleEditEventClick}
-            onDeleteEvent={handleDeleteEvent}
-            currentTheme={currentTheme}
-          />
+          <div className="animate-fadeIn">
+            <CalendarView
+              homeworks={homeworks}
+              events={events}
+              onAddEventClick={handleOpenAddEventModal}
+              onHomeworkClick={setSelectedDetailHomework}
+              onEditEvent={handleEditEventClick}
+              onDeleteEvent={handleDeleteEvent}
+            />
+          </div>
         )}
       </main>
 
-      {/* Global Floating Action Button (FAB) for Instant Access to Add Homework on all devices */}
+      {/* Global Floating Action Button (FAB) for Desktop / Tablet - Compact & Clean */}
       {activeTab !== 'add' && (
         <button
           onClick={() => {
             setEditingHomework(null);
             setActiveTab('add');
           }}
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center space-x-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-xl shadow-sky-600/30 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer font-heading font-bold text-xs sm:text-sm border border-white/20"
+          className="hidden md:flex fixed bottom-5 right-5 z-40 items-center space-x-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white px-3.5 py-2 rounded-xl shadow-md cursor-pointer font-heading font-semibold text-xs border border-white/10 btn-interactive"
           title="เพิ่มการบ้านใหม่"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-3.5 h-3.5" />
           <span className="tracking-wide">เพิ่มการบ้าน</span>
         </button>
       )}
@@ -579,15 +630,6 @@ export default function App() {
         onSaveEvent={handleSaveEvent}
         initialDate={eventInitialDate}
         editingEvent={editingEvent}
-      />
-      {/* Theme Switcher Modal */}
-      <ThemeSwitcherModal
-        isOpen={isThemeModalOpen}
-        onClose={() => setIsThemeModalOpen(false)}
-        currentTheme={currentTheme}
-        onSelectTheme={handleSelectTheme}
-        showFloatingIcons={showFloatingIcons}
-        onToggleFloatingIcons={handleToggleFloatingIcons}
       />
     </div>
   );
