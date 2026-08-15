@@ -116,3 +116,25 @@ export interface UserProfile {
   role: 'admin' | 'user';
   createdAt: string;
 }
+
+export type NotificationType = 'success' | 'info' | 'warning' | 'error';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  timestamp: string; // ISO string
+  read: boolean;
+  actionTab?: ActiveTab;
+  homeworkId?: string;
+}
+
+export interface ToastItem {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  duration?: number; // ms, default 5000ms
+  createdAt: number;
+}

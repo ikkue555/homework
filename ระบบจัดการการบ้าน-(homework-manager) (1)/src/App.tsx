@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Homework, 
   CalendarEvent, 
@@ -7,7 +7,10 @@ import {
   UserProfile, 
   SiteSettings, 
   PRNewsItem, 
-  ThemeMode 
+  ThemeMode,
+  AppNotification,
+  ToastItem,
+  NotificationType
 } from './types';
 import { getInitialThemeMode, applyThemeMode } from './lib/theme';
 import { 
@@ -42,6 +45,8 @@ import { AdminBackofficeView } from './components/AdminBackofficeView';
 import { PRPopupModal } from './components/PRPopupModal';
 import { Footer } from './components/Footer';
 import { ScrollInteractiveHelper } from './components/ScrollInteractiveHelper';
+import { ToastContainer } from './components/ToastContainer';
+import { NotificationBellModal } from './components/NotificationBellModal';
 import { PlusCircle, CheckCircle2, Loader2, Plus } from 'lucide-react';
 
 export default function App() {
@@ -65,6 +70,18 @@ export default function App() {
   const [isPRPopupOpen, setIsPRPopupOpen] = useState(false);
   const [hasCheckedPopup, setHasCheckedPopup] = useState(false);
 
+  // Notification Bell and Toasts State
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    try {
+      const saved = localStorage.getItem('homework_app_notifications');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Theme mode state (Light / Dark)
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => getInitialThemeMode());
 
@@ -87,13 +104,93 @@ export default function App() {
     sortBy: 'dueDate_asc',
   });
 
+  // Save notifications to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('homework_app_notifications', JSON.stringify(notifications.slice(0, 100)));
+    } catch (err) {
+      console.error('Failed to cache notifications:', err);
+    }
+  }, [notifications]);
+
+  // Toast & Notification Dispatch Helper
+  const addToast = useCallback((
+    title: string, 
+    message: string, 
+    type: NotificationType = 'success', 
+    options?: { duration?: number; actionTab?: ActiveTab; homeworkId?: string; recordNotification?: boolean }
+  ) => {
+    const id = Date.now().toString() + '-' + Math.random().toString(36).substring(2, 7);
+    const duration = options?.duration ?? 5000;
+    
+    const newToast: ToastItem = {
+      id,
+      title,
+      message,
+      type,
+      duration,
+      createdAt: Date.now(),
+    };
+
+    setToasts((prev) => [newToast, ...prev].slice(0, 5));
+
+    // Auto dismiss after duration
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
+
+    // Save to persistent notification inbox unless explicitly excluded
+    if (options?.recordNotification !== false) {
+      const newNotif: AppNotification = {
+        id,
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false,
+        actionTab: options?.actionTab,
+        homeworkId: options?.homeworkId,
+      };
+      setNotifications((prev) => [newNotif, ...prev]);
+    }
+  }, []);
+
+  const handleDismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleMarkNotificationAsRead = (id: string) => {
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const handleClearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  const handleDeleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
   // Apply Theme Mode on load & change
   useEffect(() => {
     applyThemeMode(themeMode);
   }, [themeMode]);
 
   const handleToggleThemeMode = () => {
-    setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setThemeMode((prev) => {
+      const nextMode = prev === 'dark' ? 'light' : 'dark';
+      addToast(
+        'เปลี่ยนธีมสำเร็จ ✨',
+        nextMode === 'dark' ? 'สลับเข้าสู่โหมดมืด (Dark Mode) เรียบร้อย' : 'สลับเข้าสู่โหมดสว่าง (Light Mode) เรียบร้อย',
+        'info',
+        { recordNotification: false }
+      );
+      return nextMode;
+    });
   };
 
   // Check auth session
@@ -187,11 +284,51 @@ export default function App() {
     };
   }, [userProfile]);
 
+  // Automatic Due Today & Overdue alert on entry
+  useEffect(() => {
+    if (isAuthChecking || !userProfile || homeworks.length === 0) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const sessionAlertKey = `hw_entry_alert_${userProfile.uid}_${todayStr}`;
+    const alreadyAlerted = sessionStorage.getItem(sessionAlertKey);
+
+    if (!alreadyAlerted) {
+      const remaining = homeworks.filter(h => !h.completed && (h.progress || 0) < 100);
+      const overdue = remaining.filter(h => h.dueDate && h.dueDate < todayStr && h.dueDate !== 'ไม่มีกำหนดส่ง');
+      const dueToday = remaining.filter(h => h.dueDate === todayStr);
+
+      if (overdue.length > 0) {
+        setTimeout(() => {
+          addToast(
+            '⚠️ มีการบ้านเลยกำหนดส่ง!',
+            `มีงานค้างที่เลยกำหนด ${overdue.length} วิชา (${overdue.map(h => h.subject).slice(0, 2).join(', ')}${overdue.length > 2 ? '...' : ''}) กรุณาตรวจสอบและส่งงาน`,
+            'error',
+            { actionTab: 'overdue', duration: 7000 }
+          );
+        }, 800);
+      }
+
+      if (dueToday.length > 0) {
+        setTimeout(() => {
+          addToast(
+            '📅 มีการบ้านต้องส่งวันนี้!',
+            `คุณมีการบ้านต้องส่งวันนี้ ${dueToday.length} วิชา: ${dueToday.map(h => h.subject).slice(0, 3).join(', ')}${dueToday.length > 3 ? '...' : ''}`,
+            'warning',
+            { actionTab: 'main', duration: 7000 }
+          );
+        }, overdue.length > 0 ? 2000 : 800);
+      }
+
+      sessionStorage.setItem(sessionAlertKey, 'true');
+    }
+  }, [homeworks, userProfile, isAuthChecking, addToast]);
+
   // Handle Logout
   const handleLogout = async () => {
     await logoutUser();
     setUserProfile(null);
     setActiveTab('main');
+    addToast('ออกจากระบบเรียบร้อย', 'คุณได้ออกจากระบบเรียบร้อยแล้ว', 'info', { recordNotification: false });
   };
 
   // Handle PR news actions
@@ -204,16 +341,29 @@ export default function App() {
       createdAt: new Date().toISOString(),
     };
     await savePRNewsToCloud(newItem);
+    addToast(
+      'เผยแพร่ข่าวประชาสัมพันธ์สำเร็จ 📢',
+      `ข่าวเรื่อง "${newItem.title}" ถูกเผยแพร่ลงในระบบเรียบร้อยแล้ว`,
+      'success',
+      { actionTab: 'news' }
+    );
   };
 
   const handleDeletePRNews = async (id: string) => {
     await deletePRNewsFromCloud(id);
+    addToast('ลบข่าวประชาสัมพันธ์เรียบร้อย', 'ลบข่าวประชาสัมพันธ์ออกจากระบบแล้ว', 'info', { actionTab: 'news' });
   };
 
   // Handle Site settings save
   const handleSaveSiteSettings = async (settings: SiteSettings) => {
     if (!userProfile || userProfile.role !== 'admin') return;
     await saveSiteSettingsToCloud(settings);
+    addToast(
+      'บันทึกการตั้งค่าระบบสำเร็จ! ⚙️',
+      'การตั้งค่าระบบหลังบ้านและชื่อระบบได้รับการอัปเดตเรียบร้อยแล้ว',
+      'success',
+      { actionTab: 'admin' }
+    );
   };
 
   // Homework CRUD Handlers
@@ -227,12 +377,35 @@ export default function App() {
     await saveHomeworkToCloud(userProfile.uid, finalHw);
     setEditingHomework(null);
     setActiveTab('main');
+
+    if (existingId) {
+      addToast(
+        'แก้ไขการบ้านสำเร็จ ✨',
+        `บันทึกข้อมูลวิชา ${finalHw.subject} เรียบร้อยแล้ว`,
+        'success',
+        { actionTab: 'main', homeworkId: finalHw.id }
+      );
+    } else {
+      addToast(
+        'เพิ่มการบ้านใหม่สำเร็จ! 📚',
+        `เพิ่มวิชา ${finalHw.subject} ${finalHw.dueDate ? `(กำหนดส่ง ${finalHw.dueDate})` : ''} เข้าระบบเรียบร้อย`,
+        'success',
+        { actionTab: 'main', homeworkId: finalHw.id }
+      );
+    }
   };
 
   const handleDeleteHomework = async (id: string) => {
     if (!userProfile) return;
+    const target = homeworks.find(h => h.id === id);
     if (confirm('คุณต้องการลบการบ้านนี้ใช่หรือไม่?')) {
       await deleteHomeworkFromCloud(userProfile.uid, id);
+      addToast(
+        'ลบการบ้านเรียบร้อย',
+        `ลบข้อมูลวิชา ${target?.subject || 'การบ้าน'} ออกจากระบบแล้ว`,
+        'info',
+        { actionTab: 'main' }
+      );
     }
   };
 
@@ -248,6 +421,22 @@ export default function App() {
     };
 
     await saveHomeworkToCloud(userProfile.uid, updated);
+
+    if (newProgress === 100) {
+      addToast(
+        'การบ้านเสร็จสมบูรณ์ 100%! 🎉',
+        `วิชา ${target.subject} ทำเสร็จเรียบร้อยและย้ายไปแท็บเสร็จแล้ว`,
+        'success',
+        { actionTab: 'completed', homeworkId: target.id }
+      );
+    } else {
+      addToast(
+        'อัปเดตความคืบหน้า',
+        `วิชา ${target.subject} ความคืบหน้าอยู่ที่ ${newProgress}%`,
+        'info',
+        { recordNotification: false }
+      );
+    }
   };
 
   const handleToggleComplete = async (id: string) => {
@@ -263,6 +452,22 @@ export default function App() {
     };
 
     await saveHomeworkToCloud(userProfile.uid, updated);
+
+    if (newCompleted) {
+      addToast(
+        'ทำงานเสร็จสมบูรณ์แล้ว! 🎉',
+        `วิชา ${target.subject} ${target.title ? `(${target.title})` : ''} ถูกบันทึกว่าทำเสร็จแล้ว`,
+        'success',
+        { actionTab: 'completed', homeworkId: target.id }
+      );
+    } else {
+      addToast(
+        'เปลี่ยนสถานะการบ้าน',
+        `ย้ายวิชา ${target.subject} กลับมาเป็นกำลังดำเนินการ`,
+        'info',
+        { actionTab: 'main', homeworkId: target.id }
+      );
+    }
   };
 
   const handleEditHomeworkClick = (hw: Homework) => {
@@ -280,12 +485,29 @@ export default function App() {
     await saveEventToCloud(userProfile.uid, eventItem);
     setIsAddEventOpen(false);
     setEditingEvent(null);
+
+    if (id) {
+      addToast(
+        'แก้ไขกิจกรรมสำเร็จ 📅',
+        `บันทึกกิจกรรม "${eventItem.title}" เรียบร้อยแล้ว`,
+        'success',
+        { actionTab: 'calendar' }
+      );
+    } else {
+      addToast(
+        'เพิ่มกิจกรรมลงปฏิทินสำเร็จ! 📅',
+        `เพิ่มกิจกรรม "${eventItem.title}" (วันที่ ${eventItem.date}) เข้าระบบเรียบร้อย`,
+        'success',
+        { actionTab: 'calendar' }
+      );
+    }
   };
 
   const handleDeleteEvent = async (id: string) => {
     if (!userProfile) return;
     if (confirm('คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?')) {
       await deleteEventFromCloud(userProfile.uid, id);
+      addToast('ลบกิจกรรมเรียบร้อย', 'ลบกิจกรรมออกจากปฏิทินแล้ว', 'info', { actionTab: 'calendar' });
     }
   };
 
@@ -381,6 +603,9 @@ export default function App() {
       <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
         <ScrollInteractiveHelper />
 
+        {/* Global Toast Notifications (Top Right) */}
+        <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
+
         {/* Global PR Popup Modal upon entering website */}
         <PRPopupModal 
           isOpen={isPRPopupOpen} 
@@ -397,10 +622,27 @@ export default function App() {
     );
   }
 
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors relative selection:bg-sky-500 selection:text-white">
       {/* Scroll Helpers (Top Progress Bar & Smooth Scroll-To-Top) */}
       <ScrollInteractiveHelper />
+
+      {/* Global Toast Notifications (Top Right - auto dismiss in 5s) */}
+      <ToastContainer toasts={toasts} onDismiss={handleDismissToast} />
+
+      {/* Global Notifications History Modal Window */}
+      <NotificationBellModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        notifications={notifications}
+        onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+        onMarkAsRead={handleMarkNotificationAsRead}
+        onClearAll={handleClearAllNotifications}
+        onDeleteNotification={handleDeleteNotification}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+      />
 
       {/* Global PR Popup Modal (Configured from Admin settings) */}
       <PRPopupModal 
@@ -409,7 +651,7 @@ export default function App() {
         siteSettings={siteSettings} 
       />
 
-      {/* Global Application Header with Theme Mode toggle */}
+      {/* Global Application Header with Theme Mode toggle & Notifications */}
       <Header
         activeTab={activeTab}
         setActiveTab={(tab) => {
@@ -425,6 +667,8 @@ export default function App() {
         onToggleThemeMode={handleToggleThemeMode}
         onOpenPRPopup={() => setIsPRPopupOpen(true)}
         onLogout={handleLogout}
+        unreadNotificationsCount={unreadNotificationsCount}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
       />
 
       {/* Main Content Area */}

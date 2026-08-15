@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { 
   BookOpen, 
   Calendar, 
-  Sparkles,
-  LogOut,
-  ShieldCheck,
-  User,
-  Megaphone,
-  Sliders,
-  Sun,
-  Moon,
-  Plus,
-  Menu,
-  X
+  Sparkles, 
+  LogOut, 
+  ShieldCheck, 
+  User, 
+  Megaphone, 
+  Sliders, 
+  Sun, 
+  Moon, 
+  Plus, 
+  Menu, 
+  X,
+  Bell
 } from 'lucide-react';
 import { ActiveTab, UserProfile, SiteSettings, ThemeMode } from '../types';
 
@@ -28,6 +29,8 @@ interface HeaderProps {
   onToggleThemeMode: () => void;
   onOpenPRPopup?: () => void;
   onLogout?: () => void;
+  unreadNotificationsCount?: number;
+  onOpenNotifications?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,6 +45,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleThemeMode,
   onOpenPRPopup,
   onLogout,
+  unreadNotificationsCount = 0,
+  onOpenNotifications,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -126,6 +131,26 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Megaphone className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 icon-hover-wiggle" />
                   <span className="hidden md:inline text-[11px]">ประกาศ</span>
+                </button>
+              )}
+
+              {/* Notifications Bell Button: Accessible on all screen sizes */}
+              {onOpenNotifications && (
+                <button
+                  id="header-btn-notifications"
+                  onClick={onOpenNotifications}
+                  title="ดูรายการแจ้งเตือนทั้งหมด"
+                  className="relative flex items-center justify-center p-2 sm:px-3 sm:py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold shadow-2xs btn-interactive cursor-pointer shrink-0"
+                  aria-label="การแจ้งเตือน"
+                >
+                  <Bell className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-600 dark:text-sky-400 ${unreadNotificationsCount > 0 ? 'animate-bounce' : 'icon-hover-wiggle'}`} />
+                  <span className="hidden md:inline ml-1.5 text-[11px]">แจ้งเตือน</span>
+                  
+                  {unreadNotificationsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 sm:top-0 sm:right-0 sm:translate-x-1 sm:-translate-y-1 px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[9px] font-extrabold leading-tight shadow-xs ring-2 ring-white dark:ring-slate-900 animate-pulse">
+                      {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                    </span>
+                  )}
                 </button>
               )}
 
@@ -306,15 +331,33 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Quick Actions in Mobile Drawer */}
             <div className="grid grid-cols-2 gap-2 pt-1">
+              {onOpenNotifications && (
+                <button
+                  onClick={() => {
+                    onOpenNotifications();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center space-x-1.5 p-2.5 bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/50 dark:hover:bg-sky-900/50 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800 rounded-2xl text-xs font-bold btn-interactive"
+                >
+                  <Bell className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                  <span>การแจ้งเตือน</span>
+                  {unreadNotificationsCount > 0 && (
+                    <span className="px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[9px] font-bold">
+                      {unreadNotificationsCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
               {onOpenPRPopup && siteSettings?.popupEnabled && (
                 <button
                   onClick={() => {
                     onOpenPRPopup();
                     setMobileMenuOpen(false);
                   }}
-                  className="flex items-center justify-center space-x-1.5 p-2.5 bg-sky-50 hover:bg-sky-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-slate-700 rounded-2xl text-xs font-bold btn-interactive"
+                  className="flex items-center justify-center space-x-1.5 p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold btn-interactive"
                 >
-                  <Megaphone className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                  <Megaphone className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                   <span>ประกาศ (Pop-up)</span>
                 </button>
               )}
@@ -324,9 +367,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onToggleThemeMode();
                   setMobileMenuOpen(false);
                 }}
-                className={`flex items-center justify-center space-x-1.5 p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-amber-300 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold btn-interactive ${
-                  !siteSettings?.popupEnabled ? 'col-span-2' : ''
-                }`}
+                className="flex items-center justify-center space-x-1.5 p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-amber-300 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold btn-interactive"
               >
                 {themeMode === 'dark' ? (
                   <>

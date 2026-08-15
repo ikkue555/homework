@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Kanit', sans-serif;
   --font-heading: 'Kanit', sans-serif;
@@ -34,7 +36,7 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   html.dark body {

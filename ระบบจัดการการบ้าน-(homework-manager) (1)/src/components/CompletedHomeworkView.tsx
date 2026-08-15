@@ -100,16 +100,16 @@ export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
 
       {/* Grid List */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 my-8">
-          <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200/80 dark:border-slate-800 my-8 transition-colors">
+          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-500 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-100 dark:border-emerald-800">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold font-heading text-slate-800">
+          <h3 className="text-lg font-bold font-heading text-slate-800 dark:text-slate-100">
             {completedHomeworks.length === 0
               ? 'ยังไม่มีการบ้านที่ทำเสร็จแล้ว'
               : 'ไม่พบรายการตามตัวกรองที่เลือก'}
           </h3>
-          <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
             {completedHomeworks.length === 0
               ? 'เมื่อทำการบ้านเสร็จและกดปุ่มเสร็จสมบูรณ์ รายการจะมาปรากฏที่นี่'
               : 'ลองเปลี่ยนคำค้นหาหรือล้างตัวกรองเพื่อดูรายการทั้งหมด'}

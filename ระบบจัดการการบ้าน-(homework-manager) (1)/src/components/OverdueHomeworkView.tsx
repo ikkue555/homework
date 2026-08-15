@@ -99,16 +99,16 @@ export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
 
       {/* Grid List */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 my-8">
-          <div className="w-16 h-16 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center mx-auto mb-3">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200/80 dark:border-slate-800 my-8 transition-colors">
+          <div className="w-16 h-16 bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-sky-100 dark:border-sky-800">
             <Clock className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold font-heading text-slate-800">
+          <h3 className="text-lg font-bold font-heading text-slate-800 dark:text-slate-100">
             {overdueHomeworks.length === 0
               ? 'เยี่ยมมาก! ไม่มีงานที่เลยกำหนดส่งในขณะนี้'
               : 'ไม่พบรายการตามตัวกรองที่เลือก'}
           </h3>
-          <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
             {overdueHomeworks.length === 0
               ? 'คุณส่งงานตรงเวลาอย่างสม่ำเสมอ รักษามาตรฐานที่ดีแบบนี้ไว้นะ!'
               : 'ลองเปลี่ยนคำค้นหาหรือล้างตัวกรองเพื่อดูรายการทั้งหมด'}

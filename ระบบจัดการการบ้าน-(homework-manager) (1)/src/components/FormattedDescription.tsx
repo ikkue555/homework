@@ -11,22 +11,8 @@ export const FormattedDescription: React.FC<FormattedDescriptionProps> = ({ text
 
   const lines = text.split('\n');
 
-  // Check if any line looks like a bullet or list item
-  const hasBullets = lines.some(line => {
-    const trimmed = line.trim();
-    return (
-      trimmed.startsWith('•') ||
-      trimmed.startsWith('-') ||
-      trimmed.startsWith('*') ||
-      /^\d+\.\s/.test(trimmed) ||
-      trimmed.startsWith('[ ]') ||
-      trimmed.startsWith('[x]') ||
-      trimmed.startsWith('[X]')
-    );
-  });
-
   return (
-    <div className={`space-y-1.5 text-slate-700 leading-relaxed ${className}`}>
+    <div className={`space-y-1.5 text-slate-700 dark:text-slate-200 leading-relaxed ${className}`}>
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         if (!trimmed) {
@@ -40,11 +26,11 @@ export const FormattedDescription: React.FC<FormattedDescriptionProps> = ({ text
           return (
             <div key={idx} className="flex items-start space-x-2 my-0.5 font-medium">
               {isChecked ? (
-                <CheckSquare className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
               ) : (
-                <Square className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                <Square className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5" />
               )}
-              <span className={isChecked ? 'line-through text-slate-400' : 'text-slate-800'}>
+              <span className={isChecked ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}>
                 {content}
               </span>
             </div>
@@ -56,8 +42,8 @@ export const FormattedDescription: React.FC<FormattedDescriptionProps> = ({ text
           const content = trimmed.replace(/^[•\-\*]\s*/, '');
           return (
             <div key={idx} className="flex items-start space-x-2 my-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 flex-shrink-0 mt-2 shadow-2xs" />
-              <span className="text-slate-800 font-medium">{content}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 dark:bg-sky-400 flex-shrink-0 mt-2 shadow-2xs" />
+              <span className="text-slate-800 dark:text-slate-100 font-medium">{content}</span>
             </div>
           );
         }
@@ -68,17 +54,17 @@ export const FormattedDescription: React.FC<FormattedDescriptionProps> = ({ text
           const [, num, content] = numMatch;
           return (
             <div key={idx} className="flex items-start space-x-2 my-0.5">
-              <span className="inline-flex items-center justify-center min-w-[18px] h-4 text-[10px] font-bold text-sky-700 bg-sky-100 rounded-md flex-shrink-0 mt-0.5">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-4 text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-950/80 rounded-md flex-shrink-0 mt-0.5 border border-sky-200/60 dark:border-sky-800">
                 {num}
               </span>
-              <span className="text-slate-800 font-medium">{content}</span>
+              <span className="text-slate-800 dark:text-slate-100 font-medium">{content}</span>
             </div>
           );
         }
 
         // Regular line
         return (
-          <p key={idx} className="text-slate-800">
+          <p key={idx} className="text-slate-800 dark:text-slate-100">
             {line}
           </p>
         );

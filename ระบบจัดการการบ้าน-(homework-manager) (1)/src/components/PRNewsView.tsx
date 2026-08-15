@@ -134,10 +134,10 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
           {onOpenPRPopup && (
             <button
               onClick={onOpenPRPopup}
-              className="flex-1 md:flex-initial px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-2xl font-bold text-xs shadow-2xs inline-flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+              className="flex-1 md:flex-initial px-3.5 py-2 bg-sky-50 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-slate-700 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-slate-700 rounded-2xl font-bold text-xs shadow-2xs inline-flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
               title="เปิดดูหน้าต่างประชาสัมพันธ์แบบ Pop-up"
             >
-              <Megaphone className="w-3.5 h-3.5 text-sky-600" />
+              <Megaphone className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>เปิดดูประกาศ (Pop-up)</span>
             </button>
           )}
@@ -155,17 +155,17 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3 transition-colors">
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Search Input */}
           <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาหัวข้อข่าว หรือเนื้อหา..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white transition-all"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all"
             />
           </div>
 
@@ -178,7 +178,7 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                 className={`px-3 py-1.5 rounded-xl text-xs font-normal whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat
                     ? 'bg-sky-600 text-white font-medium shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 {cat}
@@ -190,14 +190,14 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
 
       {/* News Cards Grid */}
       {filteredNews.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 my-4">
-          <div className="w-14 h-14 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 my-4 transition-colors">
+          <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-slate-100 dark:border-slate-700">
             <Megaphone className="w-7 h-7" />
           </div>
-          <h3 className="text-base font-semibold text-slate-700">
+          <h3 className="text-base font-semibold text-slate-700 dark:text-slate-200">
             ยังไม่มีข่าวประชาสัมพันธ์
           </h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {searchQuery || selectedCategory !== 'ทั้งหมด'
               ? 'ไม่พบข้อมูลตรงกับคำค้นหา ลองเปลี่ยนตัวกรอง'
               : 'ยังไม่มีการโพสต์ข่าวใหม่ในขณะนี้'}
@@ -208,17 +208,17 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
           {filteredNews.map((item) => (
             <div
               key={item.id}
-              className={`bg-white rounded-3xl border transition-all duration-200 overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-sm ${
+              className={`bg-white dark:bg-slate-900 rounded-3xl border transition-all duration-200 overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-sm ${
                 item.pinned 
-                  ? 'border-sky-300 ring-2 ring-sky-400/20' 
-                  : 'border-slate-200/80 hover:border-slate-300'
+                  ? 'border-sky-300 dark:border-sky-700 ring-2 ring-sky-400/20 dark:ring-sky-500/20' 
+                  : 'border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
               <div>
                 {/* Image if provided - Full size uncropped */}
                 {item.imageUrl ? (
                   <div 
-                    className="relative w-full bg-slate-50 overflow-hidden flex items-center justify-center cursor-pointer group"
+                    className="relative w-full bg-slate-50 dark:bg-slate-800 overflow-hidden flex items-center justify-center cursor-pointer group"
                     onClick={() => setLightboxImage({ url: item.imageUrl!, title: item.title })}
                     title="คลิกเพื่อขยายดูรูปภาพขนาดเต็ม"
                   >
@@ -237,8 +237,8 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                       </span>
                     )}
                     <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-                      <span className="bg-white/95 text-slate-800 text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-lg flex items-center space-x-1.5 backdrop-blur-xs">
-                        <ImageIcon className="w-3.5 h-3.5 text-sky-600" />
+                      <span className="bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-100 text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-lg flex items-center space-x-1.5 backdrop-blur-xs">
+                        <ImageIcon className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                         <span>คลิกเพื่อดูรูปภาพเต็มจอ</span>
                       </span>
                     </div>
@@ -246,7 +246,7 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                 ) : (
                   item.pinned && (
                     <div className="px-5 pt-4">
-                      <span className="inline-flex items-center space-x-1 bg-sky-100 text-sky-700 text-[10px] font-medium px-2.5 py-1 rounded-full">
+                      <span className="inline-flex items-center space-x-1 bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 text-[10px] font-medium px-2.5 py-1 rounded-full border border-sky-200/60 dark:border-sky-800">
                         <Pin className="w-3 h-3 fill-current" />
                         <span>ประกาศปักหมุด</span>
                       </span>
@@ -256,32 +256,32 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
 
                 {/* Body Content */}
                 <div className="p-5 space-y-2.5">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
-                    <span className="inline-flex items-center space-x-1 bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md font-normal">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                    <span className="inline-flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2.5 py-0.5 rounded-md font-normal border border-slate-200/60 dark:border-slate-700">
                       <Tag className="w-3 h-3" />
                       <span>{item.category || 'ทั่วไป'}</span>
                     </span>
-                    <span className="flex items-center space-x-1 text-slate-400">
+                    <span className="flex items-center space-x-1 text-slate-400 dark:text-slate-500">
                       <Calendar className="w-3 h-3" />
                       <span>{new Date(item.createdAt).toLocaleDateString('th-TH')}</span>
                     </span>
                   </div>
 
-                  <h3 className="text-base font-semibold text-slate-800 leading-snug line-clamp-2">
+                  <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">
                     {item.title}
                   </h3>
 
-                  <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line line-clamp-4">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line line-clamp-4">
                     {item.content}
                   </p>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center space-x-1.5 text-[11px] text-slate-500">
-                  <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                  <span>โพสต์โดย: <strong className="font-medium text-slate-700">{item.authorName}</strong></span>
+              <div className="px-5 py-3.5 bg-slate-50/80 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span className="flex items-center space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <UserIcon className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                  <span>โพสต์โดย: <strong className="font-medium text-slate-700 dark:text-slate-200">{item.authorName}</strong></span>
                 </span>
 
                 {isAdmin && (
@@ -291,7 +291,7 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                         onDeleteNews(item.id);
                       }
                     }}
-                    className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                    className="p-1.5 text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
                     title="ลบข่าวนี้ (แอดมิน)"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -305,18 +305,18 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
 
       {/* Admin Add PR News Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-sky-600" />
-                <h3 className="text-base font-semibold text-slate-800">
+                <Sparkles className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">
                   เพิ่มข่าวประชาสัมพันธ์ใหม่ (แอดมิน)
                 </h3>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -324,7 +324,7 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
 
             <form onSubmit={handleSubmitNewNews} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   หัวข้อข่าว/ประกาศ <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -333,37 +333,37 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="เช่น กำหนดการสอบกลางภาค 1/2569"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   หมวดหมู่ข่าว
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800"
                 >
-                  <option value="ประกาศสำคัญ">ประกาศสำคัญ</option>
-                  <option value="กิจกรรมโรงเรียน">กิจกรรมโรงเรียน</option>
-                  <option value="การเรียนการสอน">การเรียนการสอน</option>
-                  <option value="ทั่วไป">ทั่วไป</option>
+                  <option value="ประกาศสำคัญ" className="dark:bg-slate-800">ประกาศสำคัญ</option>
+                  <option value="กิจกรรมโรงเรียน" className="dark:bg-slate-800">กิจกรรมโรงเรียน</option>
+                  <option value="การเรียนการสอน" className="dark:bg-slate-800">การเรียนการสอน</option>
+                  <option value="ทั่วไป" className="dark:bg-slate-800">ทั่วไป</option>
                 </select>
               </div>
 
               {/* Image Input with Device Upload */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-medium text-slate-700">
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                     รูปภาพประกอบข่าว (Optional)
                   </label>
                   {imageUrl && (
                     <button
                       type="button"
                       onClick={() => setImageUrl('')}
-                      className="text-[11px] font-medium text-rose-600 hover:underline flex items-center space-x-0.5 cursor-pointer"
+                      className="text-[11px] font-medium text-rose-600 dark:text-rose-400 hover:underline flex items-center space-x-0.5 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>ลบรูป</span>
@@ -372,7 +372,7 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                 </div>
 
                 {/* Upload Button */}
-                <div className="bg-slate-50 border border-dashed border-sky-200 rounded-2xl p-3 text-center hover:bg-sky-50/50 transition-colors">
+                <div className="bg-slate-50 dark:bg-slate-800 border border-dashed border-sky-200 dark:border-sky-800 rounded-2xl p-3 text-center hover:bg-sky-50/50 dark:hover:bg-sky-950/30 transition-colors">
                   <input
                     type="file"
                     id="newsImageUploadInput"
@@ -382,32 +382,32 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                   />
                   <label
                     htmlFor="newsImageUploadInput"
-                    className="cursor-pointer flex items-center justify-center space-x-2 py-1 text-sky-700 text-xs font-medium"
+                    className="cursor-pointer flex items-center justify-center space-x-2 py-1 text-sky-700 dark:text-sky-300 text-xs font-medium"
                   >
-                    <Upload className="w-4 h-4 text-sky-600" />
+                    <Upload className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                     <span>{uploadingImage ? 'กำลังประมวลผล...' : 'อัพโหลดรูปภาพจากอุปกรณ์'}</span>
                   </label>
                 </div>
 
                 {/* URL Input fallback */}
                 <div className="relative">
-                  <ImageIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <ImageIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="url"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="หรือวางลิงก์รูปภาพ (URL)"
-                    className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white"
+                    className="w-full pl-9 pr-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800"
                   />
                 </div>
 
                 {imageUrl && (
-                  <img src={imageUrl} alt="Preview" className="h-28 w-full object-cover rounded-xl border border-slate-200" />
+                  <img src={imageUrl} alt="Preview" className="h-28 w-full object-cover rounded-xl border border-slate-200 dark:border-slate-700" />
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   รายละเอียดข่าว/ประกาศ <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -416,7 +416,7 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="กรอกรายละเอียดข่าวสาร..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white resize-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 resize-none"
                 />
               </div>
 
@@ -426,18 +426,18 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
                   id="pinCheckbox"
                   checked={pinned}
                   onChange={(e) => setPinned(e.target.checked)}
-                  className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
+                  className="w-4 h-4 text-sky-600 rounded border-slate-300 dark:border-slate-600 focus:ring-sky-500"
                 />
-                <label htmlFor="pinCheckbox" className="text-xs font-medium text-slate-700 cursor-pointer">
+                <label htmlFor="pinCheckbox" className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
                   ปักหมุดข่าวนี้ไว้อันดับแรก
                 </label>
               </div>
 
-              <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-medium cursor-pointer"
                 >
                   ยกเลิก
                 </button>

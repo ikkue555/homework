@@ -95,24 +95,24 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 shadow-xl relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fadeIn">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-xl relative transition-colors">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+          className="absolute right-4 top-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
+          <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-100 dark:border-sky-800">
             {editingEvent ? <Edit3 className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-800">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               {editingEvent ? 'แก้ไข Event / กิจกรรม' : 'เพิ่ม Event / กิจกรรมใหม่'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {editingEvent ? 'ปรับปรุงรายละเอียดของกิจกรรมในปฏิทิน' : 'ลงวันสอบ กิจกรรม นัดหมายติว หรือวันหยุดในปฏิทิน'}
             </p>
           </div>
@@ -121,8 +121,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-xs font-normal text-slate-600 mb-1 flex items-center space-x-1">
-              <FileText className="w-3.5 h-3.5 text-sky-600" />
+            <label className="block text-xs font-normal text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1">
+              <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>ชื่อกิจกรรม <span className="text-rose-500">*</span></span>
             </label>
             <input
@@ -130,7 +130,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               placeholder="เช่น สอบกลางภาควิชาฟิสิกส์, วันสถาปนาโรงเรียน..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all"
               required
             />
           </div>
@@ -138,53 +138,53 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           {/* Date & Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-normal text-slate-600 mb-1 flex items-center space-x-1">
-                <Calendar className="w-3.5 h-3.5 text-sky-600" />
+              <label className="block text-xs font-normal text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1">
+                <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                 <span>วันที่</span>
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-normal text-slate-600 mb-1 flex items-center space-x-1">
-                <Clock className="w-3.5 h-3.5 text-sky-600" />
+              <label className="block text-xs font-normal text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1">
+                <Clock className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                 <span>เวลา (ถ้ามี)</span>
               </label>
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all"
               />
             </div>
           </div>
 
           {/* Type */}
           <div>
-            <label className="block text-xs font-normal text-slate-600 mb-1 flex items-center space-x-1">
-              <Tag className="w-3.5 h-3.5 text-sky-600" />
+            <label className="block text-xs font-normal text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1">
+              <Tag className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>ประเภทกิจกรรม</span>
             </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as EventType)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white font-normal transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 font-normal transition-all"
             >
               {PRESET_EVENT_TYPES.map((t) => (
-                <option key={t.type} value={t.type}>{t.label}</option>
+                <option key={t.type} value={t.type} className="dark:bg-slate-800">{t.label}</option>
               ))}
             </select>
 
             {/* Custom Event Type Input when "อื่นๆ" is selected */}
             {type === 'อื่นๆ' && (
-              <div className="mt-2.5 p-3 bg-sky-50/60 rounded-xl border border-sky-100 space-y-1.5 animate-fadeIn">
-                <label className="block text-[11px] font-medium text-sky-800">
+              <div className="mt-2.5 p-3 bg-sky-50/60 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-800 space-y-1.5 animate-fadeIn">
+                <label className="block text-[11px] font-medium text-sky-800 dark:text-sky-300">
                   ระบุประเภทกิจกรรมเอง (Custom Event Type) <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -192,7 +192,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                   placeholder="เช่น แข่งกีฬา, ซ้อมดนตรี, วันเกิด, อบรมวิชาการ..."
                   value={customType}
                   onChange={(e) => setCustomType(e.target.value)}
-                  className="w-full bg-white border border-sky-200 text-slate-800 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full bg-white dark:bg-slate-800 border border-sky-200 dark:border-sky-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                   required
                 />
               </div>
@@ -201,8 +201,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
 
           {/* Location */}
           <div>
-            <label className="block text-xs font-normal text-slate-600 mb-1 flex items-center space-x-1">
-              <MapPin className="w-3.5 h-3.5 text-sky-600" />
+            <label className="block text-xs font-normal text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1">
+              <MapPin className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>สถานที่ (ถ้ามี)</span>
             </label>
             <input
@@ -210,14 +210,14 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               placeholder="เช่น ห้อง 421, หอสมุดกลาง..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white transition-all"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-normal text-slate-600 mb-1 flex items-center space-x-1">
-              <FileText className="w-3.5 h-3.5 text-sky-600" />
+            <label className="block text-xs font-normal text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1">
+              <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>รายละเอียดเพิ่มเติม</span>
             </label>
             <textarea
@@ -225,16 +225,16 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               placeholder="หมายเหตุเพิ่มเติม..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white transition-all resize-none"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all resize-none"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-normal hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-normal hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               ยกเลิก
             </button>
