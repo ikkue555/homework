@@ -452,9 +452,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               {hw.progress}%
                             </span>
                           </div>
-                          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 line-clamp-2">
-                            {hw.description}
-                          </p>
+                          <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-0.5">
+                            {hw.title || hw.subject}
+                          </h5>
+                          {hw.description && (
+                            <p className="text-[11px] font-normal text-slate-600 dark:text-slate-400 line-clamp-2">
+                              {hw.description}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>

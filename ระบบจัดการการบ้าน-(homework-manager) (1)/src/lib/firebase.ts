@@ -273,6 +273,7 @@ export function subscribeToUserHomeworks(
         return {
           id: docSnap.id,
           subject: data.subject || '',
+          title: data.title || '',
           dueDate: data.dueDate || '',
           dueTime: data.dueTime || undefined,
           type: data.type || 'การบ้านทั่วไป',

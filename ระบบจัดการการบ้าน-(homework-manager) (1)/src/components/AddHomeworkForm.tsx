@@ -29,6 +29,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
   editingHomework,
 }) => {
   const [subject, setSubject] = useState('');
+  const [title, setTitle] = useState('');
   const [hasNoDueDate, setHasNoDueDate] = useState(false);
   const [dueDate, setDueDate] = useState('');
   const [hasNoDueTime, setHasNoDueTime] = useState(false);
@@ -46,6 +47,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
   useEffect(() => {
     if (editingHomework) {
       setSubject(editingHomework.subject || '');
+      setTitle(editingHomework.title || '');
 
       if (!editingHomework.dueDate || editingHomework.dueDate === 'ไม่มีกำหนดส่ง' || editingHomework.dueDate === 'no_due_date') {
         setHasNoDueDate(true);
@@ -76,6 +78,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
       setHasNoDueDate(false);
       setHasNoDueTime(false);
       setDueTime('23:59');
+      setTitle('');
     }
   }, [editingHomework]);
 
@@ -104,6 +107,12 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
       return;
     }
 
+    const finalTitle = title.trim();
+    if (!finalTitle) {
+      alert('กรุณากรอกหัวข้องาน');
+      return;
+    }
+
     if (!hasNoDueDate && !dueDate) {
       alert('กรุณาเลือกวันกำหนดส่ง หรือเลือก "ยังไม่มีกำหนดส่ง"');
       return;
@@ -126,6 +135,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
     onSave(
       {
         subject: finalSubject,
+        title: finalTitle,
         dueDate: finalDueDate,
         dueTime: finalDueTime,
         workType,
@@ -168,20 +178,39 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Subject (วิชา - กรอกเองเท่านั้น) */}
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
-            <BookOpen className="w-4 h-4 text-sky-600" />
-            <span>วิชา <span className="text-rose-500">*</span></span>
-          </label>
-          <input
-            type="text"
-            placeholder="กรอกชื่อวิชา (เช่น คณิตศาสตร์, ภาษาไทย, ฟิสิกส์)..."
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-            required
-          />
+        {/* Subject (วิชา - กรอกเองเท่านั้น) & Title (หัวข้องาน - กรอกเอง) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Subject */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
+              <BookOpen className="w-4 h-4 text-sky-600" />
+              <span>วิชา <span className="text-rose-500">*</span></span>
+            </label>
+            <input
+              type="text"
+              placeholder="กรอกชื่อวิชา (เช่น คณิตศาสตร์, ภาษาไทย)..."
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+              required
+            />
+          </div>
+
+          {/* Title (หัวข้องาน - กรอกเอง) */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
+              <FileText className="w-4 h-4 text-sky-600" />
+              <span>หัวข้องาน <span className="text-rose-500">*</span></span>
+            </label>
+            <input
+              type="text"
+              placeholder="กรอกหัวข้องาน (เช่น แบบฝึกหัดบทที่ 3, รายงานเรื่องประวัติศาสตร์)..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-3.5 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
+              required
+            />
+          </div>
         </div>
 
         {/* Due Date & Time (วันกำหนดส่ง & เวลากำหนดส่ง) */}
