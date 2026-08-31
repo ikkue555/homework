@@ -109,21 +109,21 @@ export const PRNewsView: React.FC<PRNewsViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors">
         <div className="flex items-center space-x-4">
-          <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 shadow-xs shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-100 dark:border-sky-800 shadow-xs shrink-0">
             <Megaphone className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
                 ข่าวประชาสัมพันธ์ & ประกาศ
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100/80 text-sky-700">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100/80 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
                 {newsList.length} รายการ
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               ติดตามข้อมูลข่าวสาร กิจกรรม และประกาศสำคัญจากโรงเรียน/อาจารย์
             </p>
           </div>

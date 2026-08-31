@@ -676,7 +676,7 @@ export default function App() {
         {/* Tab: Main View */}
         {activeTab === 'main' && (
           <div className="space-y-6 animate-fadeIn">
-            {/* Stats Summary Bar */}
+            {/* Stats Summary Bar & Progress Breakdown Chart */}
             <StatsOverview
               homeworks={homeworks}
               siteSettings={siteSettings}

@@ -82,7 +82,7 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
       ) : mode === 'both' && hasImage ? (
         /* MODE 2: BOTH (Image Header + Text Details & Action Buttons) */
         <div 
-          className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden relative flex flex-col max-h-[92vh] animate-scaleUp"
+          className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 max-w-lg w-full overflow-hidden relative flex flex-col max-h-[92vh] animate-scaleUp"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Floating Close Button */}
@@ -118,13 +118,13 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
           {/* Content Body */}
           <div className="p-5 sm:p-6 overflow-y-auto space-y-3">
             {siteSettings.popupTitle && (
-              <h3 id="pr-popup-title" className="text-base sm:text-lg font-bold font-heading text-slate-900 leading-snug">
+              <h3 id="pr-popup-title" className="text-base sm:text-lg font-bold font-heading text-slate-900 dark:text-slate-100 leading-snug">
                 {siteSettings.popupTitle}
               </h3>
             )}
 
             {siteSettings.popupMessage && (
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                 {siteSettings.popupMessage}
               </p>
             )}
@@ -135,7 +135,7 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
                   href={siteSettings.popupLinkUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-sky-600 hover:text-sky-700 hover:underline"
+                  className="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline"
                 >
                   <span>คลิกอ่านรายละเอียดเพิ่มเติม</span>
                   <ExternalLink className="w-4 h-4" />
@@ -145,8 +145,8 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
           </div>
 
           {/* Footer Action Bar */}
-          <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
-            <span className="text-[11px] text-slate-400">
+          <div className="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
               กด Esc หรือคลิกด้านนอกเพื่อปิด
             </span>
             <button
@@ -161,7 +161,7 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
       ) : (
         /* MODE 3: TEXT ONLY POPUP (Or fallback when no image) */
         <div 
-          className="bg-white rounded-3xl shadow-2xl border border-sky-100 max-w-lg w-full overflow-hidden relative flex flex-col max-h-[90vh] animate-scaleUp"
+          className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-sky-100 dark:border-slate-800 max-w-lg w-full overflow-hidden relative flex flex-col max-h-[90vh] animate-scaleUp"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Floating Close Button */}
@@ -188,13 +188,13 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
           {/* Text Content Body */}
           <div className="p-6 overflow-y-auto space-y-3">
             {siteSettings.popupTitle && (
-              <h3 id="pr-popup-title" className="text-base sm:text-lg font-bold font-heading text-slate-800 leading-snug">
+              <h3 id="pr-popup-title" className="text-base sm:text-lg font-bold font-heading text-slate-800 dark:text-slate-100 leading-snug">
                 {siteSettings.popupTitle}
               </h3>
             )}
 
             {siteSettings.popupMessage && (
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                 {siteSettings.popupMessage}
               </p>
             )}
@@ -204,7 +204,7 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
                 href={siteSettings.popupLinkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 text-xs font-bold text-sky-600 hover:text-sky-700 hover:underline pt-1"
+                className="inline-flex items-center space-x-2 text-xs font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline pt-1"
               >
                 <span>อ่านรายละเอียดเพิ่มเติม</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -213,7 +213,7 @@ export const PRPopupModal: React.FC<PRPopupModalProps> = ({
           </div>
 
           {/* Modal Footer */}
-          <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+          <div className="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
             <button
               onClick={onClose}
               className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold font-heading shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2"
