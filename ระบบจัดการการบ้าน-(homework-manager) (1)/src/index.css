@@ -202,6 +202,58 @@ button:active {
   }
 }
 
+@keyframes rgbGradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes holographicSweep {
+  0% {
+    transform: translateX(-150%) translateY(-150%) rotate(35deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.75;
+  }
+  75% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateX(180%) translateY(180%) rotate(35deg);
+    opacity: 0;
+  }
+}
+
+@keyframes auraPulse {
+  0%, 100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes starSpin {
+  0% {
+    transform: rotate(0deg) scale(0.9);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.15);
+  }
+  100% {
+    transform: rotate(360deg) scale(0.9);
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -216,4 +268,26 @@ button:active {
 
 .animate-float {
   animation: floatGentle 3s ease-in-out infinite;
+}
+
+.animate-rgb-flow {
+  background-size: 300% 300% !important;
+  animation: rgbGradientFlow 4s ease infinite !important;
+}
+
+.animate-rgb-flow-fast {
+  background-size: 300% 300% !important;
+  animation: rgbGradientFlow 2.2s linear infinite !important;
+}
+
+.animate-holo-sweep {
+  animation: holographicSweep 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-aura-pulse {
+  animation: auraPulse 2s ease-in-out infinite;
+}
+
+.animate-star-spin {
+  animation: starSpin 6s linear infinite;
 }
