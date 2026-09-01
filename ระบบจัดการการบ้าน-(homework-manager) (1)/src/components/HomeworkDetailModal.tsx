@@ -13,7 +13,8 @@ import {
   AlertCircle,
   Sliders,
   FileText,
-  Sparkles
+  Sparkles,
+  Share2
 } from 'lucide-react';
 import { Homework } from '../types';
 import { FormattedDescription } from './FormattedDescription';
@@ -25,6 +26,7 @@ interface HomeworkDetailModalProps {
   onToggleComplete: (id: string) => void;
   onEdit: (homework: Homework) => void;
   onDelete: (id: string) => void;
+  onShare?: (homework: Homework) => void;
 }
 
 export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
@@ -34,6 +36,7 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
   onToggleComplete,
   onEdit,
   onDelete,
+  onShare,
 }) => {
   if (!homework) return null;
 
@@ -77,7 +80,7 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
         </button>
 
         {/* Prominent Subject Header & Badges */}
-        <div className="flex flex-wrap items-center gap-2 mb-4 pr-8">
+        <div className="flex flex-wrap items-center gap-2 mb-3 pr-8">
           <span className="inline-flex items-center space-x-2 text-sm sm:text-base font-bold px-3.5 py-1.5 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-100 border border-sky-300 dark:border-sky-700 font-heading shadow-xs">
             <BookOpen className="w-4 h-4 text-sky-600 dark:text-sky-400" />
             <span>{homework.subject}</span>
@@ -97,6 +100,23 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
             </span>
           )}
         </div>
+
+        {/* Shared By Banner (Requirement: "และให้ขึ้นด้วยว่า แชร์โดย...") */}
+        {homework.sharedBy && (
+          <div className="mb-4 p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 flex items-center space-x-2.5 text-xs text-indigo-900 dark:text-indigo-200">
+            <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+              <Share2 className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <span className="font-bold block font-heading">
+                แชร์โดย: {homework.sharedBy.displayName || homework.sharedBy.username || homework.sharedBy.email}
+              </span>
+              <span className="text-[11px] text-indigo-700 dark:text-indigo-300 opacity-80">
+                (การบ้านชิ้นนี้ถูกแชร์มาให้คุณ ความคืบหน้าจะบันทึกแยกอิสระ)
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Title / หัวข้องาน */}
         <div className="mb-4">
@@ -247,46 +267,60 @@ export const HomeworkDetailModal: React.FC<HomeworkDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Footer Actions with Visual Hierarchy according to Importance */}
+        {/* Footer Actions with Visual Hierarchy */}
         <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex items-center space-x-2">
-            {/* Secondary Action (Medium Importance): Edit */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Share to Friends */}
+            {onShare && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onShare(homework);
+                }}
+                className="px-3.5 py-2.5 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-1.5 cursor-pointer shadow-xs transition-all font-heading"
+              >
+                <Share2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>แชร์ให้เพื่อน</span>
+              </button>
+            )}
+
+            {/* Edit */}
             <button
               onClick={() => {
                 onClose();
                 onEdit(homework);
               }}
-              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 cursor-pointer shadow-xs transition-all"
+              className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 cursor-pointer shadow-xs transition-all"
             >
               <Edit3 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <span>แก้ไขข้อมูล</span>
+              <span>แก้ไข</span>
             </button>
 
-            {/* Tertiary Action (Lower Importance / Caution): Delete */}
+            {/* Delete */}
             <button
               onClick={() => {
                 onClose();
                 onDelete(homework.id);
               }}
-              className="px-3.5 py-2.5 border border-rose-200 dark:border-rose-900/70 text-rose-600 dark:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl text-xs sm:text-sm font-medium flex items-center space-x-1.5 cursor-pointer transition-all"
+              className="px-3 py-2.5 border border-rose-200 dark:border-rose-900/70 text-rose-600 dark:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl text-xs sm:text-sm font-medium flex items-center space-x-1.5 cursor-pointer transition-all"
             >
               <Trash2 className="w-4 h-4 text-rose-500" />
               <span>ลบ</span>
             </button>
           </div>
 
-          {/* Primary Action (Highest Importance - Largest size): Toggle Complete */}
+          {/* Primary Action: Toggle Complete */}
           <button
             onClick={() => {
               onToggleComplete(homework.id);
             }}
-            className={`w-full sm:w-auto px-6 py-3 rounded-2xl text-sm sm:text-base font-bold font-heading flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md hover:shadow-lg ${
+            className={`w-full sm:w-auto px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold font-heading flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md hover:shadow-lg ${
               homework.completed
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400/40'
                 : 'bg-sky-600 hover:bg-sky-700 text-white ring-2 ring-sky-400/40'
             }`}
           >
-            <CheckCircle2 className="w-5 h-5" />
+            <CheckCircle2 className="w-4 h-4" />
             <span>{homework.completed ? 'ทำเครื่องหมาย: เสร็จแล้ว ✓' : 'กดว่าเสร็จสมบูรณ์'}</span>
           </button>
         </div>

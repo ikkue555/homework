@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, 
   ChevronLeft, 
@@ -45,6 +45,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(
     today.toISOString().split('T')[0]
   );
+
+  // Automatically update and reset to current month & today's date upon entering Calendar view
+  useEffect(() => {
+    const now = new Date();
+    setCurrentYear(now.getFullYear());
+    setCurrentMonth(now.getMonth());
+    setViewMode('month');
+    setSelectedDateStr(now.toISOString().split('T')[0]);
+  }, []);
 
   // Month navigation handlers
   const handlePrevMonth = () => {

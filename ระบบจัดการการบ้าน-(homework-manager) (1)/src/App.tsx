@@ -10,7 +10,9 @@ import {
   ThemeMode,
   AppNotification,
   ToastItem,
-  NotificationType
+  NotificationType,
+  Friend,
+  FriendRequest
 } from './types';
 import { getInitialThemeMode, applyThemeMode } from './lib/theme';
 import { 
@@ -27,7 +29,16 @@ import {
   saveSiteSettingsToCloud,
   subscribeToPRNews,
   savePRNewsToCloud,
-  deletePRNewsFromCloud
+  deletePRNewsFromCloud,
+  subscribeToFriends,
+  subscribeToFriendRequests,
+  sendFriendRequest,
+  addFriendDirect,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  removeFriend,
+  shareHomeworkWithFriends,
+  shareMultipleHomeworksWithFriends
 } from './lib/firebase';
 import { Header } from './components/Header';
 import { StatsOverview } from './components/StatsOverview';
@@ -39,6 +50,7 @@ import { OverdueHomeworkView } from './components/OverdueHomeworkView';
 import { CalendarView } from './components/CalendarView';
 import { AddEventModal } from './components/AddEventModal';
 import { HomeworkDetailModal } from './components/HomeworkDetailModal';
+import { FriendsModal } from './components/FriendsModal';
 import { AuthScreen } from './components/AuthScreen';
 import { PRNewsView } from './components/PRNewsView';
 import { AdminBackofficeView } from './components/AdminBackofficeView';
@@ -59,6 +71,13 @@ export default function App() {
 
   // Calendar Events state - populated from Firebase
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  // Friends & Friend Requests state - populated from Firebase
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [incomingFriendRequests, setIncomingFriendRequests] = useState<FriendRequest[]>([]);
+  const [outgoingFriendRequests, setOutgoingFriendRequests] = useState<FriendRequest[]>([]);
+  const [isFriendsModalOpen, setIsFriendsModalOpen] = useState(false);
+  const [preselectedHomeworkForShare, setPreselectedHomeworkForShare] = useState<Homework | null>(null);
 
   // PR News state - populated from Firebase
   const [newsList, setNewsList] = useState<PRNewsItem[]>([]);
@@ -278,9 +297,29 @@ export default function App() {
       }
     );
 
+    const unsubFriends = subscribeToFriends(
+      userProfile.uid,
+      (friendsData) => {
+        setFriends(friendsData);
+      },
+      (error) => {
+        console.error("Friends subscription error:", error);
+      }
+    );
+
+    const unsubRequests = subscribeToFriendRequests(
+      userProfile.uid,
+      (incoming, outgoing) => {
+        setIncomingFriendRequests(incoming);
+        setOutgoingFriendRequests(outgoing);
+      }
+    );
+
     return () => {
       unsubHomeworks();
       unsubEvents();
+      unsubFriends();
+      unsubRequests();
     };
   }, [userProfile]);
 
@@ -523,6 +562,122 @@ export default function App() {
     setIsAddEventOpen(true);
   };
 
+  // Friend & Sharing Handlers
+  const handleOpenFriendsModal = (hw?: Homework) => {
+    setPreselectedHomeworkForShare(hw || null);
+    setIsFriendsModalOpen(true);
+  };
+
+  const handleSendFriendRequest = async (targetUser: UserProfile) => {
+    if (!userProfile) return;
+    try {
+      await sendFriendRequest(userProfile, targetUser);
+      addToast(
+        'ส่งคำขอเป็นเพื่อนแล้ว 🤝',
+        `ส่งคำขอเป็นเพื่อนไปยัง ${targetUser.displayName || targetUser.username} เรียบร้อยแล้ว`,
+        'success',
+        { recordNotification: true }
+      );
+    } catch (err: any) {
+      addToast('ไม่สามารถส่งคำขอได้', err?.message || 'เกิดข้อผิดพลาดในการส่งคำขอ', 'error', { recordNotification: false });
+      throw err;
+    }
+  };
+
+  const handleDirectAddFriend = async (targetUser: UserProfile) => {
+    if (!userProfile) return;
+    try {
+      await addFriendDirect(userProfile, targetUser);
+      addToast(
+        'เพิ่มเพื่อนสำเร็จ! 🎉',
+        `คุณและ ${targetUser.displayName || targetUser.username} เป็นเพื่อนกันเรียบร้อยแล้ว`,
+        'success',
+        { recordNotification: true }
+      );
+    } catch (err: any) {
+      addToast('ไม่สามารถเพิ่มเพื่อนได้', err?.message || 'เกิดข้อผิดพลาดในการเพิ่มเพื่อน', 'error', { recordNotification: false });
+      throw err;
+    }
+  };
+
+  const handleAcceptFriendRequest = async (request: FriendRequest) => {
+    if (!userProfile) return;
+    try {
+      await acceptFriendRequest(request, userProfile);
+      addToast(
+        'ยอมรับคำขอเป็นเพื่อนแล้ว 🎉',
+        `คุณและ ${request.fromDisplayName} เป็นเพื่อนกันเรียบร้อยแล้ว`,
+        'success',
+        { recordNotification: true }
+      );
+    } catch (err: any) {
+      addToast('เกิดข้อผิดพลาด', err?.message || 'ไม่สามารถยอมรับคำขอได้', 'error');
+      throw err;
+    }
+  };
+
+  const handleRejectFriendRequest = async (requestId: string) => {
+    try {
+      await rejectFriendRequest(requestId);
+      addToast('ปฏิเสธคำขอเป็นเพื่อน', 'ปฏิเสธคำขอเป็นเพื่อนเรียบร้อยแล้ว', 'info', { recordNotification: false });
+    } catch (err: any) {
+      addToast('เกิดข้อผิดพลาด', err?.message || 'ไม่สามารถปฏิเสธคำขอได้', 'error');
+      throw err;
+    }
+  };
+
+  const handleRemoveFriend = async (friendUid: string) => {
+    if (!userProfile) return;
+    const targetFriend = friends.find(f => f.uid === friendUid);
+    try {
+      await removeFriend(userProfile.uid, friendUid);
+      addToast('ยกเลิกเป็นเพื่อนแล้ว', `ยกเลิกการเป็นเพื่อนกับ ${targetFriend?.displayName || 'ผู้ใช้'} เรียบร้อย`, 'info', { recordNotification: false });
+    } catch (err: any) {
+      addToast('เกิดข้อผิดพลาด', err?.message || 'ไม่สามารถลบเพื่อนได้', 'error');
+      throw err;
+    }
+  };
+
+  const handleShareHomework = async (homeworkOrList: Homework | Homework[], targetFriends: Friend[]) => {
+    if (!userProfile) return;
+    const homeworksToShare = Array.isArray(homeworkOrList) ? homeworkOrList : [homeworkOrList];
+    if (homeworksToShare.length === 0) return;
+
+    try {
+      if (homeworksToShare.length === 1) {
+        const homework = homeworksToShare[0];
+        const result = await shareHomeworkWithFriends({
+          homework,
+          targetFriends,
+          currentUser: userProfile,
+        });
+
+        addToast(
+          'แชร์การบ้านสำเร็จ! 📤',
+          `แชร์วิชา "${homework.subject}" ไปยังเพื่อน ${result.friendNames.join(', ')} เรียบร้อย (ความคืบหน้าเริ่มต้นใหม่ 0% สำหรับเพื่อน)`,
+          'success',
+          { recordNotification: true, actionTab: 'main' }
+        );
+      } else {
+        const result = await shareMultipleHomeworksWithFriends({
+          homeworks: homeworksToShare,
+          targetFriends,
+          currentUser: userProfile,
+        });
+
+        addToast(
+          `แชร์การบ้าน ${homeworksToShare.length} รายการสำเร็จ! 📤`,
+          `ส่งการบ้าน (${result.homeworkSubjects.slice(0, 3).join(', ')}${result.homeworkSubjects.length > 3 ? ' และอื่นๆ' : ''}) ไปยังเพื่อน ${result.friendNames.join(', ')} เรียบร้อยแล้ว`,
+          'success',
+          { recordNotification: true, actionTab: 'main' }
+        );
+      }
+    } catch (err: any) {
+      addToast('ไม่สามารถแชร์การบ้านได้', err?.message || 'เกิดข้อผิดพลาดในการแชร์การบ้าน', 'error');
+      throw err;
+    }
+  };
+
   // List calculations
   const today = new Date().toISOString().split('T')[0];
 
@@ -669,6 +824,9 @@ export default function App() {
         onLogout={handleLogout}
         unreadNotificationsCount={unreadNotificationsCount}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
+        friendsCount={friends.length}
+        pendingRequestsCount={incomingFriendRequests.length}
+        onOpenFriends={() => handleOpenFriendsModal()}
       />
 
       {/* Main Content Area */}
@@ -737,6 +895,7 @@ export default function App() {
                     onEdit={handleEditHomeworkClick}
                     onDelete={handleDeleteHomework}
                     onViewDetail={setSelectedDetailHomework}
+                    onShare={handleOpenFriendsModal}
                   />
                 ))}
               </div>
@@ -782,6 +941,7 @@ export default function App() {
               onDelete={handleDeleteHomework}
               onViewDetail={setSelectedDetailHomework}
               onBackToMain={() => setActiveTab('main')}
+              onShare={handleOpenFriendsModal}
             />
           </div>
         )}
@@ -797,6 +957,7 @@ export default function App() {
               onDelete={handleDeleteHomework}
               onViewDetail={setSelectedDetailHomework}
               onBackToMain={() => setActiveTab('main')}
+              onShare={handleOpenFriendsModal}
             />
           </div>
         )}
@@ -862,6 +1023,10 @@ export default function App() {
           handleDeleteHomework(id);
           setSelectedDetailHomework(null);
         }}
+        onShare={(hw) => {
+          setSelectedDetailHomework(null);
+          handleOpenFriendsModal(hw);
+        }}
       />
 
       {/* Add or Edit Event Modal */}
@@ -874,6 +1039,27 @@ export default function App() {
         onSaveEvent={handleSaveEvent}
         initialDate={eventInitialDate}
         editingEvent={editingEvent}
+      />
+
+      {/* Friends & Share Homework Modal */}
+      <FriendsModal
+        isOpen={isFriendsModalOpen}
+        onClose={() => {
+          setIsFriendsModalOpen(false);
+          setPreselectedHomeworkForShare(null);
+        }}
+        currentUser={userProfile}
+        friends={friends}
+        incomingRequests={incomingFriendRequests}
+        outgoingRequests={outgoingFriendRequests}
+        homeworks={homeworks}
+        preselectedHomework={preselectedHomeworkForShare}
+        onSendFriendRequest={handleSendFriendRequest}
+        onDirectAddFriend={handleDirectAddFriend}
+        onAcceptRequest={handleAcceptFriendRequest}
+        onRejectRequest={handleRejectFriendRequest}
+        onRemoveFriend={handleRemoveFriend}
+        onShareHomework={handleShareHomework}
       />
     </div>
   );

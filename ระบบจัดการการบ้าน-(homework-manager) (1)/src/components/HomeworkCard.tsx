@@ -13,7 +13,8 @@ import {
   AlertCircle, 
   Sparkles,
   Sliders,
-  BookOpen
+  BookOpen,
+  Share2
 } from 'lucide-react';
 import { FormattedDescription } from './FormattedDescription';
 
@@ -24,6 +25,7 @@ interface HomeworkCardProps {
   onViewDetail: (homework: Homework) => void;
   onEdit: (homework: Homework) => void;
   onDelete: (id: string) => void;
+  onShare?: (homework: Homework) => void;
 }
 
 // Preset color palettes for subjects with rich vibrant themes
@@ -162,6 +164,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
   onViewDetail,
   onEdit,
   onDelete,
+  onShare,
 }) => {
   const [showProgressSlider, setShowProgressSlider] = useState(false);
 
@@ -226,7 +229,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Top Badges & Quick Action Header */}
-          <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 mb-2.5">
             {/* Subject Badge & Tags */}
             <div className="flex flex-wrap items-center gap-1.5 min-w-0">
               {/* Colorful Subject Badge */}
@@ -278,6 +281,14 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
               <span>{homework.completed ? 'เสร็จแล้ว' : 'เสร็จ'}</span>
             </button>
           </div>
+
+          {/* Shared By Badge (Requirement: "และให้ขึ้นด้วยว่า แชร์โดย...") */}
+          {homework.sharedBy && (
+            <div className="inline-flex items-center space-x-1.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/70 px-2.5 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-2xs mb-2 font-heading">
+              <Share2 className="w-3 h-3 text-indigo-500 shrink-0" />
+              <span>แชร์โดย: {homework.sharedBy.displayName || homework.sharedBy.username || homework.sharedBy.email}</span>
+            </div>
+          )}
 
           {/* Task Title & Description */}
           <div className="mb-3.5 space-y-1.5">
@@ -433,7 +444,7 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
             )}
           </div>
 
-          {/* Footer Actions (Details, Edit, Delete) */}
+          {/* Footer Actions (Details, Share, Edit, Delete) */}
           <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/60 dark:border-slate-800">
             <button
               onClick={() => onViewDetail(homework)}
@@ -445,6 +456,15 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
             </button>
 
             <div className="flex items-center space-x-1">
+              {onShare && (
+                <button
+                  onClick={() => onShare(homework)}
+                  title="แชร์การบ้านนี้ให้เพื่อน"
+                  className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded-lg transition-colors cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
                 onClick={() => onEdit(homework)}
                 title="แก้ไขข้อมูลการบ้าน"

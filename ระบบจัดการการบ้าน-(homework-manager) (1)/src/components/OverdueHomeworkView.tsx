@@ -11,6 +11,7 @@ interface OverdueHomeworkViewProps {
   onEdit: (homework: Homework) => void;
   onDelete: (id: string) => void;
   onViewDetail: (homework: Homework) => void;
+  onShare?: (homework: Homework) => void;
   onBackToMain: () => void;
 }
 
@@ -21,6 +22,7 @@ export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
   onEdit,
   onDelete,
   onViewDetail,
+  onShare,
   onBackToMain,
 }) => {
   const today = new Date().toISOString().split('T')[0];
@@ -125,6 +127,7 @@ export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onViewDetail={onViewDetail}
+              onShare={onShare}
             />
           ))}
         </div>

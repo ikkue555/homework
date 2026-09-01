@@ -13,7 +13,8 @@ import {
   Plus, 
   Menu, 
   X,
-  Bell
+  Bell,
+  Users
 } from 'lucide-react';
 import { ActiveTab, UserProfile, SiteSettings, ThemeMode } from '../types';
 
@@ -31,6 +32,9 @@ interface HeaderProps {
   onLogout?: () => void;
   unreadNotificationsCount?: number;
   onOpenNotifications?: () => void;
+  friendsCount?: number;
+  pendingRequestsCount?: number;
+  onOpenFriends?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,6 +51,9 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   unreadNotificationsCount = 0,
   onOpenNotifications,
+  friendsCount = 0,
+  pendingRequestsCount = 0,
+  onOpenFriends,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -121,6 +128,29 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-xs">{siteSettings?.navAddLabel || '+ เพิ่มการบ้าน'}</span>
               </button>
 
+              {/* Friends & Share Button: Accessible on all screen sizes */}
+              {onOpenFriends && (
+                <button
+                  id="header-btn-friends"
+                  onClick={onOpenFriends}
+                  title="ระบบเพื่อน & แชร์การบ้าน"
+                  className="relative flex items-center justify-center space-x-1 px-2.5 sm:px-3 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 rounded-2xl text-xs font-bold shadow-2xs btn-interactive cursor-pointer shrink-0 font-heading"
+                >
+                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="hidden md:inline text-[11px]">เพื่อน</span>
+                  {friendsCount > 0 && (
+                    <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-indigo-200/80 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200">
+                      {friendsCount}
+                    </span>
+                  )}
+                  {pendingRequestsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 sm:top-0 sm:right-0 sm:translate-x-1 sm:-translate-y-1 px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[9px] font-extrabold leading-tight shadow-xs ring-2 ring-white dark:ring-slate-900 animate-pulse">
+                      {pendingRequestsCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
               {/* PR Popup Announcement Button: Desktop / Tablet */}
               {onOpenPRPopup && siteSettings?.popupEnabled && (
                 <button
@@ -140,7 +170,7 @@ export const Header: React.FC<HeaderProps> = ({
                   id="header-btn-notifications"
                   onClick={onOpenNotifications}
                   title="ดูรายการแจ้งเตือนทั้งหมด"
-                  className="relative flex items-center justify-center p-2 sm:px-3 sm:py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold shadow-2xs btn-interactive cursor-pointer shrink-0"
+                  className="relative flex items-center justify-center p-2 sm:px-3 sm:py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold shadow-2xs btn-interactive cursor-pointer shrink-0"
                   aria-label="การแจ้งเตือน"
                 >
                   <Bell className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-600 dark:text-sky-400 ${unreadNotificationsCount > 0 ? 'animate-bounce' : 'icon-hover-wiggle'}`} />
@@ -159,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-btn-dark-mode"
                 onClick={onToggleThemeMode}
                 title={themeMode === 'dark' ? 'เปลี่ยนเป็นธีมสว่าง' : 'เปลี่ยนเป็นธีมมืด'}
-                className="flex items-center justify-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-300 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold shadow-2xs btn-interactive cursor-pointer shrink-0"
+                className="flex items-center justify-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-amber-300 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold shadow-2xs btn-interactive cursor-pointer shrink-0"
                 aria-label="Toggle theme mode"
               >
                 {themeMode === 'dark' ? (
@@ -287,6 +317,23 @@ export const Header: React.FC<HeaderProps> = ({
               <span>{siteSettings?.navCalendarLabel || 'ปฏิทิน & กิจกรรม'}</span>
             </button>
 
+            {/* Tab: Friends & Sharing Shortcut */}
+            {onOpenFriends && (
+              <button
+                id="tab-friends"
+                onClick={onOpenFriends}
+                className="flex items-center space-x-2 px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap cursor-pointer shrink-0 btn-interactive text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
+              >
+                <Users className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 icon-hover-wiggle" />
+                <span>ระบบเพื่อน & แชร์</span>
+                {pendingRequestsCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-500 text-white">
+                    {pendingRequestsCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Tab: Admin Backoffice */}
             {userProfile?.role === 'admin' && (
               <button
@@ -331,6 +378,29 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Quick Actions in Mobile Drawer */}
             <div className="grid grid-cols-2 gap-2 pt-1">
+              {onOpenFriends && (
+                <button
+                  onClick={() => {
+                    onOpenFriends();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center space-x-1.5 p-2.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-2xl text-xs font-bold btn-interactive"
+                >
+                  <Users className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span>ระบบเพื่อน</span>
+                  {friendsCount > 0 && (
+                    <span className="px-1.5 py-0.2 bg-indigo-200 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200 rounded-full text-[9px] font-bold">
+                      {friendsCount}
+                    </span>
+                  )}
+                  {pendingRequestsCount > 0 && (
+                    <span className="px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[9px] font-bold">
+                      +{pendingRequestsCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
               {onOpenNotifications && (
                 <button
                   onClick={() => {
@@ -470,7 +540,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-[10px] mt-0.5">{siteSettings?.navCalendarLabel || 'ปฏิทิน'}</span>
         </button>
 
-        {/* 5. Backoffice Admin Tab (if admin) or Dark/Light Mode toggle */}
+        {/* 5. Backoffice Admin Tab (if admin) or Friends Shortcut */}
         {userProfile?.role === 'admin' ? (
           <button
             onClick={() => handleTabClick('admin')}
@@ -485,16 +555,19 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         ) : (
           <button
-            onClick={onToggleThemeMode}
-            className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium btn-interactive"
-            title={themeMode === 'dark' ? 'เปลี่ยนเป็นธีมสว่าง' : 'เปลี่ยนเป็นธีมมืด'}
+            onClick={onOpenFriends}
+            className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 font-medium btn-interactive relative"
+            title="ระบบเพื่อน & แชร์การบ้าน"
           >
-            {themeMode === 'dark' ? (
-              <Sun className="w-4.5 h-4.5 text-amber-400 icon-hover-spin" />
-            ) : (
-              <Moon className="w-4.5 h-4.5 text-slate-700 dark:text-slate-300 icon-hover-wiggle" />
-            )}
-            <span className="text-[10px] mt-0.5">{themeMode === 'dark' ? 'สว่าง' : 'มืด'}</span>
+            <div className="relative">
+              <Users className="w-4.5 h-4.5 text-indigo-500 icon-hover-wiggle" />
+              {pendingRequestsCount > 0 && (
+                <span className="absolute -top-1 -right-2 px-1 py-0.2 bg-rose-500 text-white rounded-full text-[8px] font-bold leading-tight">
+                  {pendingRequestsCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] mt-0.5">เพื่อน</span>
           </button>
         )}
       </nav>

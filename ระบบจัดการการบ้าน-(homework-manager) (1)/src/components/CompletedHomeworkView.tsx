@@ -11,6 +11,7 @@ interface CompletedHomeworkViewProps {
   onEdit: (homework: Homework) => void;
   onDelete: (id: string) => void;
   onViewDetail: (homework: Homework) => void;
+  onShare?: (homework: Homework) => void;
   onBackToMain: () => void;
 }
 
@@ -21,6 +22,7 @@ export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
   onEdit,
   onDelete,
   onViewDetail,
+  onShare,
   onBackToMain,
 }) => {
   const completedHomeworks = (homeworks || []).filter(h => h && (h.completed || h.progress === 100));
@@ -126,6 +128,7 @@ export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onViewDetail={onViewDetail}
+              onShare={onShare}
             />
           ))}
         </div>

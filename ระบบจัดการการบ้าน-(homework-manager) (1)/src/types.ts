@@ -13,6 +13,14 @@ export type HomeworkType =
 
 export type Priority = 'ปกติ' | 'สำคัญ' | 'ด่วนที่สุด';
 
+export interface SharedByInfo {
+  uid: string;
+  displayName: string;
+  username?: string;
+  email?: string;
+  sharedAt: string;
+}
+
 export interface Homework {
   id: string;
   subject: string;           // วิชา (กรอกเอง)
@@ -27,6 +35,29 @@ export interface Homework {
   completedAt?: string;      // วันเวลาที่ทำเสร็จ
   members?: string[];        // รายชื่อสมาชิกกลุ่ม (ถ้าเป็นงานกลุ่ม)
   priority: Priority;        // ความสำคัญ
+  createdAt: string;
+  sharedBy?: SharedByInfo;   // ข้อมูลผู้แชร์การบ้านมา (ถ้ามี)
+  originalHomeworkId?: string; // ID ต้นทางของการบ้านที่ถูกแชร์
+}
+
+export interface Friend {
+  uid: string;
+  displayName: string;
+  email: string;
+  username?: string;
+  addedAt: string;
+}
+
+export interface FriendRequest {
+  id: string;
+  fromUid: string;
+  fromDisplayName: string;
+  fromEmail: string;
+  fromUsername?: string;
+  toUid: string;
+  toDisplayName?: string;
+  toEmail?: string;
+  status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
 }
 
