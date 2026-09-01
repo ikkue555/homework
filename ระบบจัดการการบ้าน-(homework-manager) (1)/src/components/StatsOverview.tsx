@@ -243,10 +243,10 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ homeworks, siteSet
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold font-heading text-slate-800 dark:text-slate-100">
-                สรุปสถานะความคืบหน้าการบ้าน (Progress Breakdown)
+                {siteSettings?.statProgressChartTitle || 'สรุปสถานะความคืบหน้าการบ้าน (Progress Breakdown)'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                แผนภูมิวงกลมจำแนกตามขั้นตอนการทำการบ้าน
+                {siteSettings?.statProgressChartSubtitle || 'แผนภูมิวงกลมจำแนกตามขั้นตอนการทำการบ้าน'}
               </p>
             </div>
           </div>

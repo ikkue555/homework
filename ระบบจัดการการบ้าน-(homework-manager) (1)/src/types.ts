@@ -88,10 +88,12 @@ export interface PRNewsItem {
 }
 
 export interface SiteSettings {
+  // Brand & Header
   appTitle: string;
   appSubtitle: string;
   announcementBannerText?: string;
   showAnnouncementBanner?: boolean;
+  liveSyncBadgeText?: string;
   
   // Custom Navigation Tab Labels
   navMainLabel?: string;
@@ -99,6 +101,7 @@ export interface SiteSettings {
   navCompletedLabel?: string;
   navOverdueLabel?: string;
   navCalendarLabel?: string;
+  navFriendsLabel?: string;
   navAddLabel?: string;
   navAdminLabel?: string;
 
@@ -107,16 +110,88 @@ export interface SiteSettings {
   statPendingLabel?: string;
   statCompletedLabel?: string;
   statOverdueLabel?: string;
+  statProgressChartTitle?: string;
+  statProgressChartSubtitle?: string;
+  statAvgProgressLabel?: string;
+  statAverageProgressLabel?: string;
 
   // Quick Info & Empty States
   quickNoticeTitle?: string;
   quickNoticeText?: string;
   emptyHomeworkTitle?: string;
   emptyHomeworkMessage?: string;
+  emptyCompletedTitle?: string;
+  emptyCompletedMessage?: string;
+  emptyOverdueTitle?: string;
+  emptyOverdueMessage?: string;
+  emptyNewsTitle?: string;
+  emptyNewsMessage?: string;
 
-  // Footer & Contact Info
+  // Homework Cards & Details
+  cardDuePrefix?: string;
+  cardNoDueDate?: string;
+  cardNoDueDateText?: string;
+  cardNoDueTimeText?: string;
+  cardDueTodayBadge?: string;
+  cardOverdueBadge?: string;
+  cardOverdueBadgePrefix?: string;
+  cardCompletedBadge?: string;
+  cardDaysLeftPrefix?: string;
+  cardDaysUnit?: string;
+  cardWorkTypePrefix?: string;
+  cardMarkDoneText?: string;
+  cardMarkUndoneText?: string;
+  cardViewDetailButton?: string;
+  cardCompletedButton?: string;
+  cardMarkDoneButton?: string;
+  cardSharedByPrefix?: string;
+
+  // Form Labels & Inputs
+  formAddTitle?: string;
+  formEditTitle?: string;
+  formSubjectLabel?: string;
+  formTitleLabel?: string;
+  formDueDateLabel?: string;
+  formDueTimeLabel?: string;
+  formNoDueDateOption?: string;
+  formNoDueTimeOption?: string;
+  formWorkTypeLabel?: string;
+  formWorkTypeSingle?: string;
+  formWorkTypeGroup?: string;
+  formDescriptionLabel?: string;
+  formPriorityLabel?: string;
+  formProgressLabel?: string;
+  formInitialProgressLabel?: string;
+  formSubmitAdd?: string;
+  formSubmitEdit?: string;
+  formSubmitAddButton?: string;
+  formSubmitEditButton?: string;
+  formCancelButton?: string;
+  formSaveButton?: string;
+
+  // Friends & Card Sharing
+  friendsModalTitle?: string;
+  friendsModalSubtitle?: string;
+  friendsStep1Title?: string;
+  friendsStep2Title?: string;
+  friendsTabShare?: string;
+  friendsTabMyFriends?: string;
+  friendsTabAddFriend?: string;
+  friendsTabRequests?: string;
+  friendsTabList?: string;
+  friendsTabAdd?: string;
+  friendsSelectAllButton?: string;
+  friendsDeselectAllButton?: string;
+  friendsNextStepButton?: string;
+  friendsConfirmShareButton?: string;
+  friendsShareButton?: string;
+  friendsBtnNextSelectFriends?: string;
+
+  // Footer & System Info
   footerSchoolName?: string;
   footerContactText?: string;
+  footerLiveSyncText?: string;
+  footerDevCredit?: string;
 
   // Pop up PR Settings
   popupEnabled: boolean;

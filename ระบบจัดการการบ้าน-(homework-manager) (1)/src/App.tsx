@@ -935,6 +935,7 @@ export default function App() {
           <div className="animate-fadeIn">
             <CompletedHomeworkView
               homeworks={homeworks}
+              siteSettings={siteSettings}
               onUpdateProgress={handleUpdateProgress}
               onToggleComplete={handleToggleComplete}
               onEdit={handleEditHomeworkClick}
@@ -951,6 +952,7 @@ export default function App() {
           <div className="animate-fadeIn">
             <OverdueHomeworkView
               homeworks={homeworks}
+              siteSettings={siteSettings}
               onUpdateProgress={handleUpdateProgress}
               onToggleComplete={handleToggleComplete}
               onEdit={handleEditHomeworkClick}
@@ -972,6 +974,7 @@ export default function App() {
                 setActiveTab('main');
               }}
               editingHomework={editingHomework}
+              siteSettings={siteSettings}
             />
           </div>
         )}
@@ -1054,6 +1057,7 @@ export default function App() {
         outgoingRequests={outgoingFriendRequests}
         homeworks={homeworks}
         preselectedHomework={preselectedHomeworkForShare}
+        siteSettings={siteSettings}
         onSendFriendRequest={handleSendFriendRequest}
         onDirectAddFriend={handleDirectAddFriend}
         onAcceptRequest={handleAcceptFriendRequest}

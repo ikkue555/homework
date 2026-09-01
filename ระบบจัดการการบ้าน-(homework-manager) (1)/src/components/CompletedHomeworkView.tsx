@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Homework } from '../types';
+import { Homework, SiteSettings } from '../types';
 import { HomeworkCard } from './HomeworkCard';
 import { HomeworkFilters } from './HomeworkFilters';
 import { CheckCircle2, Sparkles, Award, ArrowLeft } from 'lucide-react';
 
 interface CompletedHomeworkViewProps {
   homeworks: Homework[];
+  siteSettings?: SiteSettings | null;
   onUpdateProgress: (id: string, newProgress: number) => void;
   onToggleComplete: (id: string) => void;
   onEdit: (homework: Homework) => void;
@@ -17,6 +18,7 @@ interface CompletedHomeworkViewProps {
 
 export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
   homeworks,
+  siteSettings,
   onUpdateProgress,
   onToggleComplete,
   onEdit,
@@ -108,12 +110,12 @@ export const CompletedHomeworkView: React.FC<CompletedHomeworkViewProps> = ({
           </div>
           <h3 className="text-lg font-bold font-heading text-slate-800 dark:text-slate-100">
             {completedHomeworks.length === 0
-              ? 'ยังไม่มีการบ้านที่ทำเสร็จแล้ว'
+              ? (siteSettings?.emptyCompletedTitle || 'ยังไม่มีการบ้านที่ทำเสร็จแล้ว')
               : 'ไม่พบรายการตามตัวกรองที่เลือก'}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
             {completedHomeworks.length === 0
-              ? 'เมื่อทำการบ้านเสร็จและกดปุ่มเสร็จสมบูรณ์ รายการจะมาปรากฏที่นี่'
+              ? (siteSettings?.emptyCompletedMessage || 'เมื่อทำการบ้านเสร็จและกดปุ่มเสร็จสมบูรณ์ รายการจะมาปรากฏที่นี่')
               : 'ลองเปลี่ยนคำค้นหาหรือล้างตัวกรองเพื่อดูรายการทั้งหมด'}
           </p>
         </div>

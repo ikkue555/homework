@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Homework } from '../types';
+import { Homework, SiteSettings } from '../types';
 import { HomeworkCard } from './HomeworkCard';
 import { HomeworkFilters } from './HomeworkFilters';
 import { AlertTriangle, Clock, ArrowLeft, ShieldAlert } from 'lucide-react';
 
 interface OverdueHomeworkViewProps {
   homeworks: Homework[];
+  siteSettings?: SiteSettings | null;
   onUpdateProgress: (id: string, newProgress: number) => void;
   onToggleComplete: (id: string) => void;
   onEdit: (homework: Homework) => void;
@@ -17,6 +18,7 @@ interface OverdueHomeworkViewProps {
 
 export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
   homeworks,
+  siteSettings,
   onUpdateProgress,
   onToggleComplete,
   onEdit,
@@ -107,12 +109,12 @@ export const OverdueHomeworkView: React.FC<OverdueHomeworkViewProps> = ({
           </div>
           <h3 className="text-lg font-bold font-heading text-slate-800 dark:text-slate-100">
             {overdueHomeworks.length === 0
-              ? 'เยี่ยมมาก! ไม่มีงานที่เลยกำหนดส่งในขณะนี้'
+              ? (siteSettings?.emptyOverdueTitle || 'เยี่ยมมาก! ไม่มีงานที่เลยกำหนดส่งในขณะนี้')
               : 'ไม่พบรายการตามตัวกรองที่เลือก'}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
             {overdueHomeworks.length === 0
-              ? 'คุณส่งงานตรงเวลาอย่างสม่ำเสมอ รักษามาตรฐานที่ดีแบบนี้ไว้นะ!'
+              ? (siteSettings?.emptyOverdueMessage || 'คุณส่งงานตรงเวลาอย่างสม่ำเสมอ รักษามาตรฐานที่ดีแบบนี้ไว้นะ!')
               : 'ลองเปลี่ยนคำค้นหาหรือล้างตัวกรองเพื่อดูรายการทั้งหมด'}
           </p>
         </div>

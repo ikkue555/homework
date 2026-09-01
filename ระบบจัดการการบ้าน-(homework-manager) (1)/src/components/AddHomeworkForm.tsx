@@ -14,19 +14,21 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { Homework, WorkType, Priority } from '../types';
+import { Homework, WorkType, Priority, SiteSettings } from '../types';
 import { FormattedDescription } from './FormattedDescription';
 
 interface AddHomeworkFormProps {
   onSave: (homework: Omit<Homework, 'id' | 'createdAt'>, existingId?: string) => void;
   onCancel?: () => void;
   editingHomework?: Homework | null;
+  siteSettings?: SiteSettings | null;
 }
 
 export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
   onSave,
   onCancel,
   editingHomework,
+  siteSettings,
 }) => {
   const [subject, setSubject] = useState('');
   const [title, setTitle] = useState('');
@@ -159,7 +161,9 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold font-heading text-slate-800">
-              {editingHomework ? 'แก้ไขข้อมูลการบ้าน' : 'เพิ่มการบ้านใหม่'}
+              {editingHomework 
+                ? (siteSettings?.formEditTitle || 'แก้ไขข้อมูลการบ้าน') 
+                : (siteSettings?.formAddTitle || 'เพิ่มการบ้านใหม่')}
             </h2>
             <p className="text-xs text-slate-500">
               กรอกข้อมูลวิชา รายละเอียด และกำหนดส่งการบ้าน
@@ -184,7 +188,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
               <BookOpen className="w-4 h-4 text-sky-600" />
-              <span>วิชา <span className="text-rose-500">*</span></span>
+              <span>{siteSettings?.formSubjectLabel || 'วิชา'} <span className="text-rose-500">*</span></span>
             </label>
             <input
               type="text"
@@ -200,7 +204,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
               <FileText className="w-4 h-4 text-sky-600" />
-              <span>หัวข้องาน <span className="text-rose-500">*</span></span>
+              <span>{siteSettings?.formTitleLabel || 'หัวข้องาน'} <span className="text-rose-500">*</span></span>
             </label>
             <input
               type="text"
@@ -220,7 +224,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
                 <Calendar className="w-4 h-4 text-sky-600" />
-                <span>วันกำหนดส่ง</span>
+                <span>{siteSettings?.formDueDateLabel || 'วันกำหนดส่ง'}</span>
               </label>
 
               <label className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 cursor-pointer hover:text-sky-700">
@@ -236,7 +240,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
                   }}
                   className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                 />
-                <span>ยังไม่มีกำหนดส่ง</span>
+                <span>{siteSettings?.formNoDueDateCheckbox || 'ยังไม่มีกำหนดส่ง'}</span>
               </label>
             </div>
 
@@ -292,7 +296,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
             <AlertCircle className="w-4 h-4 text-sky-600" />
-            <span>ระดับความสำคัญ</span>
+            <span>{siteSettings?.formPriorityLabel || 'ระดับความสำคัญ'}</span>
           </label>
           <select
             value={priority}
@@ -309,7 +313,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
             <Users className="w-4 h-4 text-sky-600" />
-            <span>รูปแบบงาน</span>
+            <span>{siteSettings?.formWorkTypeLabel || 'รูปแบบงาน'}</span>
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -384,7 +388,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center space-x-1.5">
             <FileText className="w-4 h-4 text-sky-600" />
-            <span>รายละเอียดของงาน <span className="text-rose-500">*</span></span>
+            <span>{siteSettings?.formDescriptionLabel || 'รายละเอียดของงาน'} <span className="text-rose-500">*</span></span>
           </label>
 
           <textarea
@@ -415,7 +419,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-semibold text-slate-700 flex items-center space-x-1.5">
               <Sliders className="w-4 h-4 text-sky-600" />
-              <span>ความคืบหน้าเริ่มต้น:</span>
+              <span>{siteSettings?.formProgressLabel || 'ความคืบหน้าเริ่มต้น:'}</span>
             </label>
             <span className="text-sm font-bold font-heading text-sky-700 px-2.5 py-0.5 rounded-full bg-sky-100">
               {progress}%
@@ -458,7 +462,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
               onClick={onCancel}
               className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-medium text-sm transition-colors cursor-pointer"
             >
-              ยกเลิก
+              {siteSettings?.formCancelButton || 'ยกเลิก'}
             </button>
           )}
 
@@ -467,7 +471,7 @@ export const AddHomeworkForm: React.FC<AddHomeworkFormProps> = ({
             className="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold font-heading text-sm shadow-md shadow-sky-600/30 transition-all flex items-center space-x-2 cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>{editingHomework ? 'บันทึกการแก้ไข' : 'บันทึกการบ้านใหม่'}</span>
+            <span>{editingHomework ? (siteSettings?.formSaveButton || 'บันทึกการแก้ไข') : (siteSettings?.formSaveButton || 'บันทึกการบ้านใหม่')}</span>
           </button>
         </div>
       </form>
