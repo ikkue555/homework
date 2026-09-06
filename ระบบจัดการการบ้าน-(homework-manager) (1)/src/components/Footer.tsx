@@ -14,8 +14,17 @@ export const Footer: React.FC<FooterProps> = ({ siteSettings }) => {
     <footer className="mt-12 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 py-8 px-4 sm:px-6 lg:px-8 text-slate-600 dark:text-slate-400 transition-colors">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-100/80 dark:border-sky-800 shrink-0">
-            <BookOpen className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-100/80 dark:border-sky-800 shrink-0 overflow-hidden">
+            {siteSettings?.appLogoUrl ? (
+              <img 
+                src={siteSettings.appLogoUrl} 
+                alt="Logo" 
+                className="w-full h-full object-contain p-0.5 rounded-xl"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <BookOpen className="w-4 h-4" />
+            )}
           </div>
           <div>
             <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200">

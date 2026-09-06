@@ -128,8 +128,17 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer select-none group min-w-0"
               title="หน้าหลัก"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 dark:from-sky-500 dark:to-blue-500 text-white flex items-center justify-center shadow-sm shrink-0 font-heading group-hover:scale-105 transition-transform">
-                <BookOpen className="w-4.5 h-4.5 sm:w-5 sm:h-5 icon-hover-wiggle" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 dark:from-sky-500 dark:to-blue-500 text-white flex items-center justify-center shadow-sm shrink-0 font-heading group-hover:scale-105 transition-transform overflow-hidden">
+                {siteSettings?.appLogoUrl ? (
+                  <img 
+                    src={siteSettings.appLogoUrl} 
+                    alt={siteSettings?.appTitle || 'Logo'} 
+                    className="w-full h-full object-contain p-1 rounded-2xl"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <BookOpen className="w-4.5 h-4.5 sm:w-5 sm:h-5 icon-hover-wiggle" />
+                )}
               </div>
               
               <div className="min-w-0 flex items-center gap-2">

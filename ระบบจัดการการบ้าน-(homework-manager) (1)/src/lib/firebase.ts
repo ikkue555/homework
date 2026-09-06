@@ -761,6 +761,7 @@ export async function seedInitialUserExamsIfEmpty(_userId: string): Promise<void
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   appTitle: 'ระบบจัดการการบ้าน & ตารางเรียน',
   appSubtitle: 'ติดตามการบ้าน กำหนดส่ง และกิจกรรมการเรียนรู้แบบเรียลไทม์',
+  appLogoUrl: '',
   announcementBannerText: '📢 ยินดีต้อนรับสู่ระบบจัดการการบ้าน ตรวจสอบข่าวสารและวันส่งงานได้ที่นี่!',
   showAnnouncementBanner: true,
   liveSyncBadgeText: 'ซิงค์สด',

@@ -93,6 +93,7 @@ export interface ExamSchedule {
   room?: string;               // ห้องสอบ เช่น "421"
   building?: string;           // อาคาร เช่น "อาคาร 4"
   seatNumber?: string;         // เลขที่นั่งสอบ เช่น "A12"
+  score?: string;              // คะแนนที่สอบ เช่น "20 คะแนน", "30", "100"
   topics: ExamTopic[];         // ขอบเขตเนื้อหาที่สอบ พร้อมระบบ Checkbox
   color?: string;              // สีประจำวิชา
   notes?: string;              // บันทึกเพิ่มเติม
@@ -117,6 +118,7 @@ export interface SiteSettings {
   // Brand & Header
   appTitle: string;
   appSubtitle: string;
+  appLogoUrl?: string; // Custom uploaded logo Base64 or URL
   announcementBannerText?: string;
   showAnnouncementBanner?: boolean;
   liveSyncBadgeText?: string;

@@ -11,15 +11,11 @@ import {
   Filter, 
   Edit3, 
   Trash2, 
-  Printer, 
   CheckCircle2, 
   ChevronDown, 
   ChevronUp, 
   AlertCircle,
   AlertTriangle,
-  Share2,
-  Copy,
-  Check,
   Columns,
   Table as TableIcon,
   Sparkles,
@@ -27,7 +23,8 @@ import {
   ArrowRight,
   RefreshCw,
   Cloud,
-  Save
+  Save,
+  Award
 } from 'lucide-react';
 import { ExamSchedule, ExamTopic, UserProfile } from '../types';
 import { 
@@ -46,6 +43,8 @@ interface ExamScheduleViewProps {
   onToggleTopic: (examId: string, topicId: string, completed: boolean) => Promise<void>;
   onClearAllExams?: () => Promise<void>;
   onNavigateToCalendar?: (date?: string) => void;
+  isExternalAddOpen?: boolean;
+  onCloseExternalAdd?: () => void;
 }
 
 type FilterType = 'all' | 'กลางภาค' | 'ปลายภาค' | 'เก็บคะแนน';
@@ -59,6 +58,8 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
   onToggleTopic,
   onClearAllExams,
   onNavigateToCalendar,
+  isExternalAddOpen,
+  onCloseExternalAdd,
 }) => {
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,16 +83,9 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
   // Auto-Save System State
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [lastAutoSaveTime, setLastAutoSaveTime] = useState<string>('');
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Inline Note Editor State (Detail Panel)
-  const [inlineNotes, setInlineNotes] = useState('');
 
   // Mobile expanded cards state
   const [expandedCardIds, setExpandedCardIds] = useState<Record<string, boolean>>({});
-
-  // Quick Copy Feedback State
-  const [hasCopiedSummary, setHasCopiedSummary] = useState(false);
 
   // Quick Topic input in Detail Panel
   const [quickTopicText, setQuickTopicText] = useState('');
@@ -166,6 +160,14 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
     setIsModalOpen(true);
   };
 
+  // Listen for external add exam trigger (e.g. from bottom-right FAB in App.tsx)
+  useEffect(() => {
+    if (isExternalAddOpen) {
+      handleOpenAddModal();
+      onCloseExternalAdd?.();
+    }
+  }, [isExternalAddOpen, onCloseExternalAdd]);
+
   const handleOpenEditModal = (exam: ExamSchedule, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setEditingExam(exam);
@@ -183,43 +185,6 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
     } catch (err) {
       console.error('Failed to delete exam:', err);
     }
-  };
-
-  // Sync inline notes when selectedExam changes
-  useEffect(() => {
-    if (selectedExam) {
-      setInlineNotes(selectedExam.notes || '');
-    } else {
-      setInlineNotes('');
-    }
-  }, [selectedExam?.id, selectedExam?.notes]);
-
-  // Debounced auto-save for notes
-  const handleInlineNotesChange = (newNotes: string) => {
-    setInlineNotes(newNotes);
-    if (!selectedExam) return;
-
-    setAutoSaveStatus('saving');
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-    }
-
-    autoSaveTimerRef.current = setTimeout(async () => {
-      try {
-        const updatedExam: ExamSchedule = {
-          ...selectedExam,
-          notes: newNotes.trim() || undefined,
-          updatedAt: new Date().toISOString(),
-        };
-        await onSaveExam(updatedExam);
-        setAutoSaveStatus('saved');
-        const nowStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        setLastAutoSaveTime(nowStr);
-      } catch (err) {
-        console.error('Failed to auto-save notes:', err);
-        setAutoSaveStatus('idle');
-      }
-    }, 600);
   };
 
   const handleToggleTopicWithAutoSave = async (examId: string, topicId: string, completed: boolean) => {
@@ -298,28 +263,6 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleCopySummary = () => {
-    if (exams.length === 0) return;
-    const lines = [
-      '📋 ตารางสอบ - การบ้านทาซาน',
-      `👤 นักเรียน: ${userProfile?.displayName || 'ผู้ใช้งาน'}`,
-      '----------------------------------------',
-      ...exams.map((e, idx) => {
-        const cd = getExamCountdown(e.date);
-        return `${idx + 1}. [${e.examType}] ${e.subject}\n   📅 ${formatThaiExamDate(e.date, 'full')} เวลา ${e.startTime} - ${e.endTime}\n   📍 ${e.building || ''} ${e.room || ''} (ที่นั่ง ${e.seatNumber || '-'}) [${cd.label}]`;
-      }),
-      '----------------------------------------',
-      `รวมทั้งหมด ${exams.length} วิชาสอบ`
-    ];
-    navigator.clipboard.writeText(lines.join('\n'));
-    setHasCopiedSummary(true);
-    setTimeout(() => setHasCopiedSummary(false), 2500);
-  };
-
   return (
     <div className="space-y-6 pb-20 print:p-0 print:m-0 print:space-y-3">
       {/* 1. Header Banner & Quick Actions (Hidden in Print) */}
@@ -335,16 +278,13 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
               <span>ระบบตารางสอบอัจฉริยะ (Exam Schedule System)</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black font-heading text-white tracking-tight flex items-center gap-3">
-              ตารางสอบ & ขอบเขตเนื้อหา
+              ตารางสอบ
               {stats.today > 0 && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-600 text-white animate-pulse shadow-md shadow-rose-600/30">
                   🚨 สอบวันนี้ {stats.today} วิชา!
                 </span>
               )}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-              ติดตามวัน เวลา สถานที่สอบ และติ๊กตรวจเช็กขอบเขตเนื้อหาที่ต้องอ่านทบทวนได้อย่างเป็นระบบ รองรับการใช้งานแบบ 100% Responsive ทุกหน้าจอ
-            </p>
           </div>
 
           {/* Quick Action Buttons */}
@@ -385,33 +325,6 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
             )}
 
             <button
-              onClick={handlePrint}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="พิมพ์ตารางสอบ หรือ บันทึกเป็น PDF"
-            >
-              <Printer className="w-4 h-4 text-slate-300" />
-              <span>พิมพ์ / บันทึก PDF</span>
-            </button>
-
-            <button
-              onClick={handleCopySummary}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="คัดลอกสรุปตารางสอบส่งต่อให้เพื่อน"
-            >
-              {hasCopiedSummary ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-400">คัดลอกแล้ว!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 text-slate-300" />
-                  <span>คัดลอกสรุป</span>
-                </>
-              )}
-            </button>
-
-            <button
               onClick={handleOpenAddModal}
               className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/30 transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
             >
@@ -422,26 +335,15 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
         </div>
 
         {/* Mini Stats Bar */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="mt-5 pt-4 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-2.5 rounded-2xl bg-slate-800/40 border border-slate-800">
             <span className="text-[11px] font-semibold text-slate-400">วิชาสอบทั้งหมด</span>
             <div className="text-lg font-black text-white mt-0.5">{stats.total} วิชา</div>
           </div>
           <div className="p-2.5 rounded-2xl bg-slate-800/40 border border-slate-800">
-            <span className="text-[11px] font-semibold text-rose-400">การสอบที่กำลังจะมาถึง</span>
-            <div className="text-lg font-black text-rose-400 mt-0.5">{stats.upcoming} วิชา</div>
-          </div>
-          <div className="p-2.5 rounded-2xl bg-slate-800/40 border border-slate-800">
             <span className="text-[11px] font-semibold text-amber-400">ความคืบหน้าอ่านหนังสือ</span>
             <div className="text-lg font-black text-amber-400 mt-0.5">
               {stats.topicPercent}% <span className="text-[11px] font-normal text-slate-400">({stats.completedTopics}/{stats.totalTopics} หัวข้อ)</span>
-            </div>
-          </div>
-          <div className="p-2.5 rounded-2xl bg-slate-800/40 border border-slate-800">
-            <span className="text-[11px] font-semibold text-emerald-400">ไฮไลท์ในปฏิทิน</span>
-            <div className="text-lg font-black text-emerald-400 mt-0.5 flex items-center gap-1">
-              <span>📌 หมุดสีแดง</span>
-              <span className="text-[10px] font-normal text-slate-400">ซิงค์อัตโนมัติ</span>
             </div>
           </div>
         </div>
@@ -560,11 +462,19 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                 key={exam.id}
                 className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm hover:border-rose-500/50 transition-all space-y-3"
               >
-                {/* Top Row: Type Badge + Countdown Badge */}
+                {/* Top Row: Type Badge + Score Badge + Countdown Badge */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
-                    {badge.label}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
+                      {badge.label}
+                    </span>
+                    {exam.score && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        <Award className="w-3 h-3 text-amber-500" />
+                        <span>{exam.score}</span>
+                      </span>
+                    )}
+                  </div>
                   <span className={`px-2.5 py-0.5 rounded-full text-[11px] ${countdown.badgeClasses}`}>
                     {countdown.label}
                   </span>
@@ -672,11 +582,16 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                   </div>
                 )}
 
-                {/* Notes (if any) */}
-                {exam.notes && (
-                  <div className="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
-                    <span>{exam.notes}</span>
+                {/* Score highlight (แทนหมายเหตุเดิม) */}
+                {exam.score && (
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <Award className="w-4 h-4 text-amber-500" />
+                      <span>คะแนนที่สอบ:</span>
+                    </div>
+                    <span className="font-extrabold text-amber-700 dark:text-amber-300">
+                      {exam.score}
+                    </span>
                   </div>
                 )}
 
@@ -735,6 +650,12 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
                           {badge.label}
                         </span>
+                        {exam.score && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            <Award className="w-3 h-3 text-amber-500" />
+                            <span>{exam.score}</span>
+                          </span>
+                        )}
                         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                           <Clock className="w-3 h-3 text-rose-500" />
                           {exam.startTime} - {exam.endTime} น.
@@ -796,9 +717,17 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                 {/* Header with Countdown & Badges */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getExamTypeBadgeProps(selectedExam.examType).bg} ${getExamTypeBadgeProps(selectedExam.examType).text} ${getExamTypeBadgeProps(selectedExam.examType).border}`}>
-                      {selectedExam.examType}
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getExamTypeBadgeProps(selectedExam.examType).bg} ${getExamTypeBadgeProps(selectedExam.examType).text} ${getExamTypeBadgeProps(selectedExam.examType).border}`}>
+                        {selectedExam.examType}
+                      </span>
+                      {selectedExam.score && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          <Award className="w-3.5 h-3.5 text-amber-500" />
+                          <span>{selectedExam.score}</span>
+                        </span>
+                      )}
+                    </div>
                     <span className={`px-2.5 py-0.5 rounded-full text-xs ${getExamCountdown(selectedExam.date).badgeClasses}`}>
                       {getExamCountdown(selectedExam.date).label}
                     </span>
@@ -918,26 +847,23 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                   </form>
                 </div>
 
-                {/* Interactive Notes & Auto-Save */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                      <span>สิ่งที่ต้องเตรียม / บันทึกช่วยจำ</span>
-                    </label>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                      <Cloud className="w-3 h-3 text-emerald-500" />
-                      <span>บันทึกอัตโนมัติ</span>
+                {/* คะแนนที่สอบ Card (แทนหมายเหตุเดิม) */}
+                {selectedExam.score && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/25 border border-amber-200/70 dark:border-amber-900/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <Award className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-amber-900 dark:text-amber-200 block">คะแนนที่สอบ</span>
+                        <span className="text-[10px] text-amber-700/80 dark:text-amber-400/80">เกณฑ์คะแนนสอบวิชานี้</span>
+                      </div>
+                    </div>
+                    <span className="text-base font-black text-amber-600 dark:text-amber-400">
+                      {selectedExam.score}
                     </span>
                   </div>
-                  <textarea
-                    value={inlineNotes}
-                    onChange={(e) => handleInlineNotesChange(e.target.value)}
-                    placeholder="พิมพ์บันทึกช่วยจำ เช่น พกดินสอ 2B, บัตรนักเรียน, เครื่องคิดเลข... (ระบบบันทึกอัตโนมัติทันทีที่พิมพ์)"
-                    rows={3}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-rose-500 transition-all placeholder:text-slate-400 leading-relaxed"
-                  />
-                </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -1017,7 +943,15 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                         {exam.startTime} - {exam.endTime}
                       </td>
                       <td className="py-3.5 px-4 font-bold font-heading text-slate-900 dark:text-slate-100">
-                        {exam.subject}
+                        <div className="flex items-center gap-2">
+                          <span>{exam.subject}</span>
+                          {exam.score && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                              <Award className="w-2.5 h-2.5 text-amber-500" />
+                              <span>{exam.score}</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
@@ -1101,7 +1035,14 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                 <td className="border border-black p-2 text-center font-bold">{idx + 1}</td>
                 <td className="border border-black p-2 font-semibold">{formatThaiExamDate(exam.date, 'short')}</td>
                 <td className="border border-black p-2">{exam.startTime} - {exam.endTime} น.</td>
-                <td className="border border-black p-2 font-bold">{exam.subject}</td>
+                <td className="border border-black p-2 font-bold">
+                  {exam.subject}
+                  {exam.score && (
+                    <div className="text-[11px] font-normal text-amber-800">
+                      คะแนน: {exam.score}
+                    </div>
+                  )}
+                </td>
                 <td className="border border-black p-2 text-center">{exam.examType}</td>
                 <td className="border border-black p-2">
                   {exam.building ? `${exam.building} ` : ''}
@@ -1119,11 +1060,6 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                     </ul>
                   ) : (
                     <span className="text-slate-400">-</span>
-                  )}
-                  {exam.notes && (
-                    <div className="mt-1 text-[10px] text-slate-600 italic font-medium">
-                      หมายเหตุ: {exam.notes}
-                    </div>
                   )}
                 </td>
               </tr>

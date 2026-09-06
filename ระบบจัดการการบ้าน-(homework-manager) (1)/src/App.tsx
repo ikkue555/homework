@@ -122,6 +122,9 @@ export default function App() {
   const [eventInitialDate, setEventInitialDate] = useState<string | undefined>();
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
+  // Add Exam Modal Trigger (for floating action button)
+  const [isAddExamOpen, setIsAddExamOpen] = useState(false);
+
   // Filter State
   const [filters, setFilters] = useState<HomeworkFilterState>({
     searchQuery: '',
@@ -1135,23 +1138,34 @@ export default function App() {
               onToggleTopic={handleToggleExamTopic}
               onClearAllExams={handleClearAllExams}
               onNavigateToCalendar={() => setActiveTab('calendar')}
+              isExternalAddOpen={isAddExamOpen}
+              onCloseExternalAdd={() => setIsAddExamOpen(false)}
             />
           </div>
         )}
       </main>
 
-      {/* Global Floating Action Button (FAB) for Desktop / Tablet - Compact & Clean */}
+      {/* Global Floating Action Button (FAB) - Changes dynamically between "เพิ่มการบ้าน" and "เพิ่มวิชาสอบ" */}
       {activeTab !== 'add' && (
         <button
+          id="global-floating-action-btn"
           onClick={() => {
-            setEditingHomework(null);
-            setActiveTab('add');
+            if (activeTab === 'exam') {
+              setIsAddExamOpen(true);
+            } else {
+              setEditingHomework(null);
+              setActiveTab('add');
+            }
           }}
-          className="hidden md:flex fixed bottom-5 right-5 z-40 items-center space-x-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white px-3.5 py-2 rounded-xl shadow-md cursor-pointer font-heading font-semibold text-xs border border-white/10 btn-interactive"
-          title="เพิ่มการบ้านใหม่"
+          className={`fixed bottom-20 md:bottom-5 right-4 md:right-5 z-40 flex items-center space-x-1.5 px-3.5 py-2.5 sm:py-2 rounded-2xl md:rounded-xl shadow-lg cursor-pointer font-heading font-semibold text-xs border border-white/10 btn-interactive transition-all ${
+            activeTab === 'exam'
+              ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white shadow-rose-600/30'
+              : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white shadow-sky-600/30'
+          }`}
+          title={activeTab === 'exam' ? 'เพิ่มวิชาสอบใหม่' : 'เพิ่มการบ้านใหม่'}
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="tracking-wide">เพิ่มการบ้าน</span>
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span className="tracking-wide">{activeTab === 'exam' ? 'เพิ่มวิชาสอบ' : 'เพิ่มการบ้าน'}</span>
         </button>
       )}
 

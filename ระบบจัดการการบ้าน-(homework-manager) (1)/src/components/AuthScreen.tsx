@@ -309,8 +309,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
         {/* Brand Header */}
         <div className="text-center space-y-2 pt-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 ring-4 ring-sky-50 dark:ring-sky-950 mx-auto">
-            <BookOpen className="w-8 h-8" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 ring-4 ring-sky-50 dark:ring-sky-950 mx-auto overflow-hidden">
+            {siteSettings?.appLogoUrl ? (
+              <img 
+                src={siteSettings.appLogoUrl} 
+                alt={siteSettings?.appTitle || 'โลโก้'} 
+                className="w-full h-full object-contain p-1.5 rounded-2xl"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <BookOpen className="w-8 h-8" />
+            )}
           </div>
           <h1 className="text-2xl font-bold font-heading text-slate-800 dark:text-slate-100 tracking-tight">
             {siteSettings?.appTitle || 'ระบบจัดการการบ้าน'}

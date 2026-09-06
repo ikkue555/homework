@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SiteSettings, UserProfile, PRNewsItem } from '../types';
 import { 
   ShieldCheck, 
@@ -30,7 +30,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { getAllRegisteredUsers, DEFAULT_SITE_SETTINGS } from '../lib/firebase';
-import { compressImageFile } from '../lib/imageUtils';
+import { compressImageFile, compressLogoFile } from '../lib/imageUtils';
 import { PRPopupModal } from './PRPopupModal';
 
 interface AdminBackofficeViewProps {
@@ -56,6 +56,9 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoDragOver, setLogoDragOver] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [isPreviewPopupOpen, setIsPreviewPopupOpen] = useState(false);
 
   // Content Text Editor Category & Search Filters
@@ -108,6 +111,32 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
       // Reset input value so same file can be reselected if needed
       e.target.value = '';
     }
+  };
+
+  // Upload Logo from user device
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const dataUrl = await compressLogoFile(file, 360);
+      handleFormChange('appLogoUrl', dataUrl);
+    } catch (err: any) {
+      alert(err.message || 'ไม่สามารถอัพโหลดโลโก้ได้');
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) {
+        logoInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleLogoFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleLogoUpload(file);
+  };
+
+  const handleClearLogo = () => {
+    handleFormChange('appLogoUrl', '');
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -190,7 +219,7 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
           }`}
         >
           <Layout className="w-4 h-4" />
-          <span>ข้อความส่วนหัว & แถบประกาศ</span>
+          <span>โลโก้, ชื่อระบบ & ข้อความ</span>
         </button>
 
         <button
@@ -306,7 +335,7 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
             <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
               {[
                 { id: 'all', label: 'ทั้งหมด' },
-                { id: 'header', label: '1. ชื่อระบบ & ส่วนหัว' },
+                { id: 'header', label: '1. โลโก้, ชื่อระบบ & ส่วนหัว' },
                 { id: 'nav', label: '2. เมนูนำทาง' },
                 { id: 'stats', label: '3. สถิติ & กราฟ' },
                 { id: 'empty', label: '4. ข้อความแจ้งเตือน' },
@@ -336,8 +365,170 @@ export const AdminBackofficeView: React.FC<AdminBackofficeViewProps> = ({
             <div className="space-y-4 pt-2">
               <h3 className="text-xs font-bold font-heading text-sky-900 uppercase tracking-wider bg-sky-50 px-3 py-1.5 rounded-lg inline-flex items-center space-x-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-sky-600" />
-                <span>1. ชื่อระบบ & แถบประกาศส่วนหัว (Header & Branding)</span>
+                <span>1. โลโก้, ชื่อระบบ & แถบประกาศส่วนหัว (Header & Branding)</span>
               </h3>
+
+              {/* LOGO UPLOAD & PREVIEW CARD */}
+              <div className="bg-gradient-to-br from-sky-50/60 via-white to-indigo-50/30 p-5 rounded-3xl border border-sky-200/80 space-y-4 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-sky-100 pb-3">
+                  <div>
+                    <h4 className="text-sm font-bold font-heading text-slate-800 flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-sky-600" />
+                      <span>โลโก้ประจำระบบ (App Logo)</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      อัพโหลดไฟล์ภาพโลโก้จากเครื่อง (คอมพิวเตอร์/มือถือ) เพื่อนำไปแสดงในแถบนำทางส่วนหัวและหน้าเข้าสู่ระบบทันที
+                    </p>
+                  </div>
+                  {formData.appLogoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleClearLogo}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer w-fit"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>ลบโลโก้ (ใช้ไอคอนสมุดมาตรฐาน)</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Upload Area & Live Previews Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                  <div className="lg:col-span-6 space-y-3">
+                    {/* Hidden Native File Input */}
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={handleLogoFileInput}
+                      className="hidden"
+                    />
+
+                    {/* Drag & Drop Dropzone */}
+                    <div
+                      onClick={() => logoInputRef.current?.click()}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setLogoDragOver(true);
+                      }}
+                      onDragLeave={() => setLogoDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setLogoDragOver(false);
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) handleLogoUpload(file);
+                      }}
+                      className={`p-5 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2.5 select-none ${
+                        logoDragOver
+                          ? 'border-sky-500 bg-sky-100/60 scale-[1.01]'
+                          : 'border-sky-300/80 hover:border-sky-500 hover:bg-sky-50/50 bg-white shadow-2xs'
+                      }`}
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center shadow-xs">
+                        {uploadingLogo ? (
+                          <RefreshCw className="w-6 h-6 animate-spin text-sky-600" />
+                        ) : (
+                          <Upload className="w-6 h-6 text-sky-600" />
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 block">
+                          {uploadingLogo ? 'กำลังประมวลผลและลดขนาดไฟล์...' : 'คลิกเลือกไฟล์รูปภาพโลโก้ หรือลากไฟล์มาวางที่นี่'}
+                        </span>
+                        <span className="text-[11px] text-slate-500 block mt-0.5">
+                          รองรับ PNG (แนะนำพื้นหลังโปร่งใส), JPG, WebP, SVG
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Alternative Direct URL Input */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-600 block">
+                        หรือใส่ URL ของรูปภาพโลโก้โดยตรง:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="url"
+                          value={formData.appLogoUrl || ''}
+                          onChange={(e) => handleFormChange('appLogoUrl', e.target.value)}
+                          placeholder="https://example.com/logo.png"
+                          className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                        {formData.appLogoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => handleFormChange('appLogoUrl', '')}
+                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            title="ล้างข้อมูล"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Real-time Visual Previews mirroring user screenshots */}
+                  <div className="lg:col-span-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                      ตัวอย่างการแสดงผลจริงตามที่ตั้งค่า (Live Previews)
+                    </span>
+
+                    {/* Preview 1: Header / Navbar Format (Matching user screenshot 1) */}
+                    <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 block">1. แถบนำทางส่วนหัวของเว็บ (Navbar Header)</span>
+                      <div className="flex items-center space-x-2.5 bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-xs shrink-0 overflow-hidden">
+                          {formData.appLogoUrl ? (
+                            <img
+                              src={formData.appLogoUrl}
+                              alt="Header Preview"
+                              className="w-full h-full object-contain p-1 rounded-2xl"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <BookOpen className="w-5 h-5" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h5 className="text-sm font-bold font-heading text-slate-900 truncate leading-tight">
+                            {formData.appTitle || 'Bolivar Hub'}
+                          </h5>
+                          <p className="text-[10px] text-slate-500 truncate leading-tight mt-0.5">
+                            {formData.appSubtitle || 'ระบบจัดการการบ้าน'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview 2: Auth / Login Center Format (Matching user screenshot 2) */}
+                    <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 block">2. หน้าเข้าสู่ระบบ (Login / Auth Screen)</span>
+                      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs text-center space-y-1.5">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-500 text-white flex items-center justify-center shadow-md shadow-sky-500/25 ring-4 ring-sky-50 mx-auto overflow-hidden">
+                          {formData.appLogoUrl ? (
+                            <img
+                              src={formData.appLogoUrl}
+                              alt="Auth Preview"
+                              className="w-full h-full object-contain p-1.5 rounded-2xl"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <BookOpen className="w-8 h-8" />
+                          )}
+                        </div>
+                        <h5 className="text-base font-bold font-heading text-slate-900 tracking-tight">
+                          {formData.appTitle || 'Bolivar Hub'}
+                        </h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
