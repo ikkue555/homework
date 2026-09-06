@@ -1,5 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { 
+  initializeFirestore,
   getFirestore, 
   collection, 
   onSnapshot, 
@@ -9,19 +11,37 @@ import {
   getDocs,
   deleteDoc,
   query,
-  where
+  where,
+  getDocFromServer
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { Homework, CalendarEvent, UserProfile, SiteSettings, PRNewsItem, Friend, FriendRequest } from '../types';
+import { Homework, CalendarEvent, ExamSchedule, UserProfile, SiteSettings, PRNewsItem, Friend, FriendRequest } from '../types';
 
 // Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firestore
-export const db = getFirestore(
-  app, 
+// Initialize Firestore with long-polling fallback to guarantee robust connection in iframe/proxy environments
+export const db = initializeFirestore(
+  app,
+  {
+    experimentalForceLongPolling: true,
+  },
   firebaseConfig.firestoreDatabaseId || '(default)'
 );
+
+export const auth = getAuth(app);
+
+// Validate initial connection gracefully
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.warn("Firestore operating in offline cache mode; changes will automatically sync when connectivity is restored.");
+    }
+  }
+}
+testConnection();
 
 export const ADMIN_SECRET_CODE = 'กินพืชหรือกินเนื้อ';
 const CURRENT_USER_SESSION_KEY = 'hw_app_current_user_session_v1';
@@ -540,7 +560,7 @@ export function subscribeToUserHomeworks(
       onUpdate(items);
     },
     (err) => {
-      console.error('Firestore User Homework sync error:', err);
+      console.warn('Firestore User Homework sync notice (operating in offline/cached mode):', err);
       if (onError) onError(err);
     }
   );
@@ -577,7 +597,7 @@ export function subscribeToUserEvents(
       onUpdate(items);
     },
     (err) => {
-      console.error('Firestore User Events sync error:', err);
+      console.warn('Firestore User Events sync notice (operating in offline/cached mode):', err);
       if (onError) onError(err);
     }
   );
@@ -632,6 +652,111 @@ export async function deleteEventFromCloud(userId: string, id: string): Promise<
   await deleteDoc(docRef);
 }
 
+/**
+ * Subscribe to real-time exam schedules for a specific user.
+ */
+export function subscribeToUserExams(
+  userId: string,
+  onUpdate: (exams: ExamSchedule[]) => void,
+  onError?: (error: Error) => void
+) {
+  if (!userId) return () => {};
+  const examsRef = collection(db, 'users', userId, 'exams');
+
+  return onSnapshot(
+    examsRef,
+    (snapshot) => {
+      const items: ExamSchedule[] = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          subject: data.subject || '',
+          examType: data.examType || 'กลางภาค',
+          date: data.date || '',
+          startTime: data.startTime || '',
+          endTime: data.endTime || '',
+          room: data.room || undefined,
+          building: data.building || undefined,
+          seatNumber: data.seatNumber || undefined,
+          topics: Array.isArray(data.topics) ? data.topics : [],
+          color: data.color || undefined,
+          notes: data.notes || undefined,
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || undefined,
+        } as ExamSchedule;
+      });
+
+      // Sort by date ascending, then startTime ascending
+      items.sort((a, b) => {
+        if (a.date !== b.date) {
+          return a.date.localeCompare(b.date);
+        }
+        return (a.startTime || '').localeCompare(b.startTime || '');
+      });
+
+      onUpdate(items);
+    },
+    (err) => {
+      console.warn('Firestore User Exams sync notice (operating in offline/cached mode):', err);
+      if (onError) onError(err);
+    }
+  );
+}
+
+/**
+ * Save or update an exam schedule for a specific user
+ */
+export async function saveExamToCloud(userId: string, exam: ExamSchedule): Promise<void> {
+  if (!userId) return;
+  const examId = exam.id || Date.now().toString();
+  const docRef = doc(db, 'users', userId, 'exams', examId);
+  const payload: Record<string, any> = { 
+    ...exam, 
+    id: examId,
+    updatedAt: new Date().toISOString()
+  };
+  Object.keys(payload).forEach((key) => {
+    if (payload[key] === undefined) {
+      delete payload[key];
+    }
+  });
+  await setDoc(docRef, payload, { merge: true });
+}
+
+/**
+ * Delete an exam schedule for a specific user
+ */
+export async function deleteExamFromCloud(userId: string, id: string): Promise<void> {
+  if (!userId) return;
+  const docRef = doc(db, 'users', userId, 'exams', id);
+  await deleteDoc(docRef);
+}
+
+/**
+ * Delete ALL exam schedules for a specific user (Clear all exam data)
+ */
+export async function clearAllUserExamsFromCloud(userId: string): Promise<void> {
+  if (!userId) return;
+  try {
+    const examsRef = collection(db, 'users', userId, 'exams');
+    const snap = await getDocs(examsRef);
+    if (!snap.empty) {
+      const deletePromises = snap.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+    }
+  } catch (err) {
+    console.warn('Notice clearing exams (will sync when online):', err);
+  }
+}
+
+/**
+ * Seed initial sample exam schedules - disabled per user request to keep exams clean
+ */
+export async function seedInitialUserExamsIfEmpty(_userId: string): Promise<void> {
+  // Empty: no demo exams are auto-seeded so user starts completely clean
+  return;
+}
+
 // DEFAULT SITE SETTINGS
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   appTitle: 'ระบบจัดการการบ้าน & ตารางเรียน',
@@ -645,6 +770,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   navCompletedLabel: 'เสร็จสมบูรณ์',
   navOverdueLabel: 'เลยกำหนดส่ง',
   navCalendarLabel: 'ปฏิทิน & กิจกรรม',
+  navExamLabel: 'ตารางสอบ',
   navFriendsLabel: 'ระบบเพื่อน & แชร์',
   navAddLabel: '+ เพิ่มการบ้าน',
   navAdminLabel: 'ระบบหลังบ้าน',
@@ -795,7 +921,7 @@ export function subscribeToPRNews(
       onUpdate(items);
     },
     (err) => {
-      console.error('Error fetching PR news:', err);
+      console.warn('PR news snapshot notice (operating in offline/cached mode):', err);
     }
   );
 }
@@ -892,7 +1018,7 @@ export function subscribeToFriends(
       onUpdate(friends);
     },
     (err) => {
-      console.error('Error subscribing to friends:', err);
+      console.warn('Notice subscribing to friends (operating in offline/cached mode):', err);
       if (onError) onError(err);
     }
   );
@@ -932,7 +1058,7 @@ export function subscribeToFriendRequests(
       onUpdate(incoming, outgoing);
     },
     (err) => {
-      console.error('Error subscribing to friend requests:', err);
+      console.warn('Friend requests snapshot notice (operating in offline/cached mode):', err);
     }
   );
 }

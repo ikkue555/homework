@@ -1,0 +1,108 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered user account profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Homework": {
+      "title": "Homework",
+      "description": "Student homework and assignment item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "subject": { "type": "string" },
+        "title": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "dueTime": { "type": "string" },
+        "type": { "type": "string" },
+        "workType": { "type": "string", "enum": ["เดี่ยว", "กลุ่ม"] },
+        "description": { "type": "string" },
+        "progress": { "type": "number" },
+        "completed": { "type": "boolean" },
+        "priority": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "subject", "dueDate"]
+    },
+    "CalendarEvent": {
+      "title": "CalendarEvent",
+      "description": "School and personal calendar event",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "title", "date"]
+    },
+    "ExamSchedule": {
+      "title": "ExamSchedule",
+      "description": "Student exam schedule item with venue, time, countdown, and scope topics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "subject": { "type": "string" },
+        "examType": { "type": "string" },
+        "date": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "room": { "type": "string" },
+        "building": { "type": "string" },
+        "seatNumber": { "type": "string" },
+        "topics": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "subject", "examType", "date", "startTime", "endTime"]
+    },
+    "PRNewsItem": {
+      "title": "PRNewsItem",
+      "description": "Public school announcement or news post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "authorName": { "type": "string" },
+        "pinned": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "content"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/users/{userId}/homeworks/{homeworkId}": {
+      "schema": "Homework",
+      "description": "User specific homework items"
+    },
+    "/users/{userId}/events/{eventId}": {
+      "schema": "CalendarEvent",
+      "description": "User specific calendar events"
+    },
+    "/users/{userId}/exams/{examId}": {
+      "schema": "ExamSchedule",
+      "description": "User specific exam schedules"
+    },
+    "/pr_news/{newsId}": {
+      "schema": "PRNewsItem",
+      "description": "School wide announcements and news"
+    }
+  }
+}

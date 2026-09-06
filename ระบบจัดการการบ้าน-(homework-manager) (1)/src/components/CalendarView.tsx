@@ -9,17 +9,20 @@ import {
   Clock, 
   Edit3, 
   Trash2, 
-  MapPin 
+  MapPin,
+  GraduationCap
 } from 'lucide-react';
-import { Homework, CalendarEvent } from '../types';
+import { Homework, CalendarEvent, ExamSchedule } from '../types';
 
 interface CalendarViewProps {
   homeworks: Homework[];
   events: CalendarEvent[];
+  exams?: ExamSchedule[];
   onAddEventClick: (date?: string) => void;
   onHomeworkClick: (homework: Homework) => void;
   onEditEvent?: (event: CalendarEvent) => void;
   onDeleteEvent?: (eventId: string) => void;
+  onNavigateToExam?: () => void;
 }
 
 const THAI_MONTHS = [
@@ -32,10 +35,12 @@ const WEEKDAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 export const CalendarView: React.FC<CalendarViewProps> = ({
   homeworks,
   events,
+  exams = [],
   onAddEventClick,
   onHomeworkClick,
   onEditEvent,
   onDeleteEvent,
+  onNavigateToExam,
 }) => {
   const today = new Date();
 
@@ -94,6 +99,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   // Selected date items
   const safeHomeworks = (homeworks || []).filter(Boolean);
   const safeEvents = (events || []).filter(Boolean);
+  const safeExams = (exams || []).filter(Boolean);
 
   const selectedHomeworks = selectedDateStr
     ? safeHomeworks.filter(h => h.dueDate === selectedDateStr)
@@ -101,6 +107,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const selectedEvents = selectedDateStr
     ? safeEvents.filter(e => e.date === selectedDateStr)
+    : [];
+
+  const selectedExams = selectedDateStr
+    ? safeExams.filter(e => e.date === selectedDateStr)
     : [];
 
   return (
@@ -257,6 +267,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     const dateStr = formatDayString(currentYear, mIdx, dayNum);
                     const hasHw = safeHomeworks.some(h => h.dueDate === dateStr);
                     const hasEvt = safeEvents.some(e => e.date === dateStr);
+                    const hasExam = safeExams.some(e => e.date === dateStr);
                     const isToday = dateStr === today.toISOString().split('T')[0];
 
                     return (
@@ -267,11 +278,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         }`}
                       >
                         {dayNum}
-                        {(hasHw || hasEvt) && (
+                        {(hasHw || hasEvt || hasExam) && (
                           <span
-                            className={`w-1 h-1 rounded-full absolute bottom-0.5 ${
-                              hasHw ? 'bg-rose-500' : 'bg-blue-500'
+                            className={`w-1.5 h-1.5 rounded-full absolute bottom-0.5 ${
+                              hasExam ? 'bg-rose-600 animate-pulse ring-1 ring-white' : hasHw ? 'bg-rose-500' : 'bg-blue-500'
                             }`}
+                            title={hasExam ? 'มีสอบ' : hasHw ? 'มีกำหนดส่งการบ้าน' : 'มีกิจกรรม'}
                           />
                         )}
                       </span>
@@ -323,6 +335,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                 const dayHomeworks = safeHomeworks.filter(h => h.dueDate === dateStr);
                 const dayEvents = safeEvents.filter(e => e.date === dateStr);
+                const dayExams = safeExams.filter(e => e.date === dateStr);
 
                 return (
                   <div
@@ -333,6 +346,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         ? 'border-sky-500 ring-2 ring-sky-300 dark:ring-sky-700 bg-sky-50/40 dark:bg-sky-950/40 shadow-xs'
                         : isToday
                         ? 'border-sky-300 dark:border-sky-700 bg-sky-50/20 dark:bg-sky-950/20'
+                        : dayExams.length > 0
+                        ? 'border-rose-300/80 dark:border-rose-800/80 bg-rose-50/20 dark:bg-rose-950/15 hover:border-rose-400'
                         : 'border-slate-100 dark:border-slate-800 hover:border-sky-200 dark:hover:border-sky-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60'
                     }`}
                   >
@@ -350,6 +365,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                       {/* Item Counter Badges */}
                       <div className="flex items-center space-x-1">
+                        {dayExams.length > 0 && (
+                          <span
+                            className="flex items-center space-x-0.5 px-1 py-0.2 bg-rose-600 text-white rounded text-[8.5px] font-black shadow-2xs animate-pulse"
+                            title={`📍 มีสอบ ${dayExams.length} วิชา: ${dayExams.map(x => x.subject).join(', ')}`}
+                          >
+                            <MapPin className="w-2.5 h-2.5 fill-current" />
+                            <span>สอบ</span>
+                          </span>
+                        )}
                         {dayHomeworks.length > 0 && (
                           <span
                             className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"
@@ -367,8 +391,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                     {/* Preview Cards/Pills on day cell */}
                     <div className="space-y-1 mt-1 overflow-hidden">
+                      {/* Show exam pills first with Red Pin 📍 */}
+                      {dayExams.map((ex) => (
+                        <div
+                          key={ex.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onNavigateToExam) onNavigateToExam();
+                          }}
+                          className="text-[10px] font-bold truncate px-1.5 py-0.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow-2xs flex items-center space-x-1 cursor-pointer transition-colors"
+                          title={`📍 สอบ ${ex.subject} (${ex.startTime} - ${ex.endTime})`}
+                        >
+                          <span className="text-[9px]">📍</span>
+                          <span className="truncate">สอบ {ex.subject}</span>
+                        </div>
+                      ))}
+
                       {/* Show top homework */}
-                      {dayHomeworks.slice(0, 2).map((hw) => (
+                      {dayHomeworks.slice(0, dayExams.length > 0 ? 1 : 2).map((hw) => (
                         <div
                           key={hw.id}
                           className={`text-[10px] font-semibold truncate px-1.5 py-0.5 rounded-md border ${
@@ -381,8 +421,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         </div>
                       ))}
 
-                      {/* Show top event */}
-                      {dayEvents.slice(0, 1).map((evt) => (
+                      {/* Show top event if space */}
+                      {dayExams.length === 0 && dayEvents.slice(0, 1).map((evt) => (
                         <div
                           key={evt.id}
                           className="text-[10px] font-semibold truncate px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
@@ -391,9 +431,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         </div>
                       ))}
 
-                      {dayHomeworks.length + dayEvents.length > 3 && (
+                      {dayExams.length + dayHomeworks.length + dayEvents.length > 3 && (
                         <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold px-1">
-                          +{dayHomeworks.length + dayEvents.length - 3} เพิ่มเติม
+                          +{dayExams.length + dayHomeworks.length + dayEvents.length - 3} เพิ่มเติม
                         </div>
                       )}
                     </div>
@@ -434,6 +474,60 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
               {/* Items List for Selected Day */}
               <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                {/* Exams section if any */}
+                {selectedExams.length > 0 && (
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-2xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider flex items-center space-x-1.5">
+                        <GraduationCap className="w-4 h-4 text-rose-600" />
+                        <span>มีสอบวันนี้ ({selectedExams.length} วิชา)</span>
+                      </h4>
+                      {onNavigateToExam && (
+                        <button
+                          onClick={onNavigateToExam}
+                          className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline font-bold cursor-pointer flex items-center space-x-1"
+                        >
+                          <span>เปิดตารางสอบ</span>
+                          <span>→</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {selectedExams.map((ex) => (
+                        <div
+                          key={ex.id}
+                          onClick={onNavigateToExam}
+                          className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-rose-200/80 dark:border-rose-900/60 shadow-2xs hover:border-rose-400 transition-all cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-1">
+                              <span>📍</span>
+                              <span>{ex.subject}</span>
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+                              {ex.examType}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-2">
+                            <span>⏰ {ex.startTime} - {ex.endTime}</span>
+                            {ex.room && <span>• 🏛️ {ex.room}</span>}
+                            {ex.seatNumber && <span>• 🪑 ที่นั่ง {ex.seatNumber}</span>}
+                          </div>
+                          {ex.topics && ex.topics.length > 0 && (
+                            <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-600 dark:text-slate-400 flex items-center justify-between">
+                              <span>อ่านแล้ว {ex.topics.filter(t => t.completed).length}/{ex.topics.length} เรื่อง</span>
+                              <span className="font-bold text-rose-600">
+                                {Math.round((ex.topics.filter(t => t.completed).length / ex.topics.length) * 100)}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Homeworks due section */}
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center space-x-1.5">

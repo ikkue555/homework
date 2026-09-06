@@ -74,7 +74,33 @@ export interface CalendarEvent {
   location?: string;         // สถานที่
 }
 
-export type ActiveTab = 'main' | 'completed' | 'overdue' | 'add' | 'calendar' | 'news' | 'admin';
+export type ExamType = 'กลางภาค' | 'ปลายภาค' | 'เก็บคะแนน' | 'สอบย่อย' | 'อื่นๆ';
+
+export interface ExamTopic {
+  id: string;
+  title: string;
+  completed: boolean;
+  notes?: string;
+}
+
+export interface ExamSchedule {
+  id: string;
+  subject: string;             // ชื่อวิชา
+  examType: ExamType | string; // ประเภทการสอบ (กลางภาค / ปลายภาค / เก็บคะแนน)
+  date: string;                // วันที่สอบ (YYYY-MM-DD)
+  startTime: string;           // เวลาเริ่ม เช่น "08:30"
+  endTime: string;             // เวลาจบ เช่น "10:30"
+  room?: string;               // ห้องสอบ เช่น "421"
+  building?: string;           // อาคาร เช่น "อาคาร 4"
+  seatNumber?: string;         // เลขที่นั่งสอบ เช่น "A12"
+  topics: ExamTopic[];         // ขอบเขตเนื้อหาที่สอบ พร้อมระบบ Checkbox
+  color?: string;              // สีประจำวิชา
+  notes?: string;              // บันทึกเพิ่มเติม
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type ActiveTab = 'main' | 'completed' | 'overdue' | 'add' | 'calendar' | 'exam' | 'news' | 'admin';
 
 export interface PRNewsItem {
   id: string;
@@ -101,6 +127,7 @@ export interface SiteSettings {
   navCompletedLabel?: string;
   navOverdueLabel?: string;
   navCalendarLabel?: string;
+  navExamLabel?: string;
   navFriendsLabel?: string;
   navAddLabel?: string;
   navAdminLabel?: string;

@@ -12,7 +12,8 @@ import {
   ToastItem,
   NotificationType,
   Friend,
-  FriendRequest
+  FriendRequest,
+  ExamSchedule
 } from './types';
 import { getInitialThemeMode, applyThemeMode } from './lib/theme';
 import { 
@@ -38,7 +39,11 @@ import {
   rejectFriendRequest,
   removeFriend,
   shareHomeworkWithFriends,
-  shareMultipleHomeworksWithFriends
+  shareMultipleHomeworksWithFriends,
+  subscribeToUserExams,
+  saveExamToCloud,
+  deleteExamFromCloud,
+  clearAllUserExamsFromCloud
 } from './lib/firebase';
 import { Header } from './components/Header';
 import { StatsOverview } from './components/StatsOverview';
@@ -55,6 +60,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { PRNewsView } from './components/PRNewsView';
 import { AdminBackofficeView } from './components/AdminBackofficeView';
 import { PRPopupModal } from './components/PRPopupModal';
+import { ExamScheduleView } from './components/ExamScheduleView';
 import { Footer } from './components/Footer';
 import { ScrollInteractiveHelper } from './components/ScrollInteractiveHelper';
 import { ToastContainer } from './components/ToastContainer';
@@ -71,6 +77,9 @@ export default function App() {
 
   // Calendar Events state - populated from Firebase
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  // Exam Schedule state - populated from Firebase
+  const [exams, setExams] = useState<ExamSchedule[]>([]);
 
   // Friends & Friend Requests state - populated from Firebase
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -269,11 +278,35 @@ export default function App() {
     if (!userProfile) {
       setHomeworks([]);
       setEvents([]);
+      setExams([]);
       setIsHomeworksLoading(false);
       return;
     }
 
     setIsHomeworksLoading(true);
+
+    // One-time automatic purge of previous exams as requested by user
+    const EXAM_PURGE_STORAGE_KEY = 'purged_all_exams_user_request_v1';
+    if (!localStorage.getItem(EXAM_PURGE_STORAGE_KEY)) {
+      localStorage.setItem(EXAM_PURGE_STORAGE_KEY, 'true');
+      clearAllUserExamsFromCloud(userProfile.uid)
+        .then(() => {
+          setExams([]);
+        })
+        .catch((err) => {
+          console.warn("Initial exam purge notice:", err);
+        });
+    }
+
+    const unsubExams = subscribeToUserExams(
+      userProfile.uid,
+      (examsData) => {
+        setExams(examsData);
+      },
+      (error) => {
+        console.warn("Exams subscription notice (operating in offline/cached mode):", error);
+      }
+    );
 
     const unsubHomeworks = subscribeToUserHomeworks(
       userProfile.uid,
@@ -282,7 +315,7 @@ export default function App() {
         setIsHomeworksLoading(false);
       },
       (error) => {
-        console.error("Homeworks subscription error:", error);
+        console.warn("Homeworks subscription notice (operating in offline/cached mode):", error);
         setIsHomeworksLoading(false);
       }
     );
@@ -293,7 +326,7 @@ export default function App() {
         setEvents(data);
       },
       (error) => {
-        console.error("Events subscription error:", error);
+        console.warn("Events subscription notice (operating in offline/cached mode):", error);
       }
     );
 
@@ -303,7 +336,7 @@ export default function App() {
         setFriends(friendsData);
       },
       (error) => {
-        console.error("Friends subscription error:", error);
+        console.warn("Friends subscription notice (operating in offline/cached mode):", error);
       }
     );
 
@@ -316,6 +349,7 @@ export default function App() {
     );
 
     return () => {
+      unsubExams();
       unsubHomeworks();
       unsubEvents();
       unsubFriends();
@@ -560,6 +594,101 @@ export default function App() {
     setEditingEvent(event);
     setEventInitialDate(event.date);
     setIsAddEventOpen(true);
+  };
+
+  // Exam Schedule Handlers
+  const handleSaveExam = async (exam: ExamSchedule) => {
+    if (!userProfile) return;
+    try {
+      await saveExamToCloud(userProfile.uid, exam);
+      addToast(
+        'บันทึกตารางสอบสำเร็จ 🎓',
+        `บันทึกข้อมูลการสอบวิชา ${exam.subject} เรียบร้อยแล้ว`,
+        'success',
+        { actionTab: 'exam' }
+      );
+    } catch (err: any) {
+      console.error('Save exam error:', err);
+      addToast(
+        'เกิดข้อผิดพลาดในการบันทึก',
+        err?.message || 'ไม่สามารถบันทึกตารางสอบได้ กรุณาลองใหม่อีกครั้ง',
+        'error',
+        { recordNotification: false }
+      );
+      throw err;
+    }
+  };
+
+  const handleDeleteExam = async (examId: string) => {
+    if (!userProfile) return;
+    try {
+      await deleteExamFromCloud(userProfile.uid, examId);
+      addToast(
+        'ลบตารางสอบแล้ว 🗑️',
+        'นำรายการสอบออกจากตารางเรียบร้อยแล้ว',
+        'info',
+        { actionTab: 'exam', recordNotification: false }
+      );
+    } catch (err: any) {
+      console.error('Delete exam error:', err);
+      addToast(
+        'เกิดข้อผิดพลาดในการลบ',
+        err?.message || 'ไม่สามารถลบตารางสอบได้',
+        'error',
+        { recordNotification: false }
+      );
+      throw err;
+    }
+  };
+
+  const handleToggleExamTopic = async (examId: string, topicId: string, completed: boolean) => {
+    if (!userProfile) return;
+    const targetExam = exams.find(e => e.id === examId);
+    if (!targetExam) return;
+
+    const updatedTopics = (targetExam.topics || []).map(t => 
+      t.id === topicId ? { ...t, completed } : t
+    );
+
+    const updatedExam: ExamSchedule = {
+      ...targetExam,
+      topics: updatedTopics,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Optimistic state update
+    setExams(prev => prev.map(e => e.id === examId ? updatedExam : e));
+
+    try {
+      await saveExamToCloud(userProfile.uid, updatedExam);
+    } catch (err) {
+      console.error('Failed to toggle exam topic:', err);
+      // Revert if error
+      setExams(prev => prev.map(e => e.id === examId ? targetExam : e));
+    }
+  };
+
+  const handleClearAllExams = async () => {
+    if (!userProfile) return;
+    try {
+      await clearAllUserExamsFromCloud(userProfile.uid);
+      setExams([]);
+      addToast(
+        'ลบข้อมูลตารางสอบทั้งหมดแล้ว 🗑️',
+        'ล้างรายการสอบและข้อมูลทั้งหมดออกจากระบบเรียบร้อยแล้ว',
+        'info',
+        { actionTab: 'exam', recordNotification: false }
+      );
+    } catch (err: any) {
+      console.error('Clear all exams error:', err);
+      addToast(
+        'เกิดข้อผิดพลาดในการลบตารางสอบ',
+        err?.message || 'ไม่สามารถล้างข้อมูลตารางสอบได้',
+        'error',
+        { recordNotification: false }
+      );
+      throw err;
+    }
   };
 
   // Friend & Sharing Handlers
@@ -985,10 +1114,27 @@ export default function App() {
             <CalendarView
               homeworks={homeworks}
               events={events}
+              exams={exams}
               onAddEventClick={handleOpenAddEventModal}
               onHomeworkClick={setSelectedDetailHomework}
               onEditEvent={handleEditEventClick}
               onDeleteEvent={handleDeleteEvent}
+              onNavigateToExam={() => setActiveTab('exam')}
+            />
+          </div>
+        )}
+
+        {/* Tab: Exam Schedule */}
+        {activeTab === 'exam' && (
+          <div className="animate-fadeIn">
+            <ExamScheduleView
+              exams={exams}
+              userProfile={userProfile}
+              onSaveExam={handleSaveExam}
+              onDeleteExam={handleDeleteExam}
+              onToggleTopic={handleToggleExamTopic}
+              onClearAllExams={handleClearAllExams}
+              onNavigateToCalendar={() => setActiveTab('calendar')}
             />
           </div>
         )}
