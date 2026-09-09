@@ -50,6 +50,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
   const [room, setRoom] = useState('');
   const [seatNumber, setSeatNumber] = useState('');
   const [score, setScore] = useState('');
+  const [isCompleted, setIsCompleted] = useState(false);
   
   // Topics list state - starts completely empty
   const [topics, setTopics] = useState<ExamTopic[]>([]);
@@ -72,6 +73,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
       setRoom(editingExam.room || '');
       setSeatNumber(editingExam.seatNumber || '');
       setScore(editingExam.score || '');
+      setIsCompleted(Boolean(editingExam.isCompleted));
       setTopics(editingExam.topics ? [...editingExam.topics] : []);
       setIsDraftRestored(false);
       setDraftSavedAt(null);
@@ -92,6 +94,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
             setRoom(parsed.room || '');
             setSeatNumber(parsed.seatNumber || '');
             setScore(parsed.score || '');
+            setIsCompleted(Boolean(parsed.isCompleted));
             // Filter out old placeholder topic if it was stored
             const cleanedTopics = Array.isArray(parsed.topics) 
               ? parsed.topics.filter((t: any) => t.title !== 'บทที่ 1: เนื้อหาและทฤษฎีพื้นฐาน')
@@ -119,6 +122,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
         setRoom('');
         setSeatNumber('');
         setScore('');
+        setIsCompleted(false);
         setTopics([]); // No default topics
         setIsDraftRestored(false);
         setDraftSavedAt(null);
@@ -148,6 +152,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
           room,
           seatNumber,
           score,
+          isCompleted,
           topics,
           savedAt: nowStr
         };
@@ -159,7 +164,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [subject, examType, date, startTime, endTime, building, room, seatNumber, score, topics, isOpen, editingExam]);
+  }, [subject, examType, date, startTime, endTime, building, room, seatNumber, score, isCompleted, topics, isOpen, editingExam]);
 
   const handleClearDraft = () => {
     localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -173,6 +178,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
     setRoom('');
     setSeatNumber('');
     setScore('');
+    setIsCompleted(false);
     setTopics([]);
     setIsDraftRestored(false);
     setDraftSavedAt(null);
@@ -219,7 +225,7 @@ export const ExamModal: React.FC<ExamModalProps> = ({
 
     try {
       const examData: ExamSchedule = {
-        id: editingExam?.id || 'exam_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        id: editingExam?.id || ('exam_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7)),
         subject: subject.trim(),
         examType,
         date,
@@ -229,7 +235,14 @@ export const ExamModal: React.FC<ExamModalProps> = ({
         room: room.trim() || undefined,
         seatNumber: seatNumber.trim() || undefined,
         score: score.trim() || undefined,
-        topics,
+        isCompleted,
+        completedAt: isCompleted ? (editingExam?.completedAt || new Date().toISOString()) : undefined,
+        topics: (topics || []).map((t) => ({
+          id: t.id || ('top_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+          title: t.title.trim(),
+          completed: Boolean(t.completed),
+          ...(t.notes && t.notes.trim() ? { notes: t.notes.trim() } : {}),
+        })),
         createdAt: editingExam?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -549,6 +562,41 @@ export const ExamModal: React.FC<ExamModalProps> = ({
                   ยังไม่มีการระบุหัวข้อสอบ (พิมพ์ด้านบนเพื่อเพิ่ม)
                 </p>
               )}
+            </div>
+
+            {/* สถานะเสร็จสิ้นการสอบ */}
+            <div
+              onClick={() => setIsCompleted(!isCompleted)}
+              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                isCompleted
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 ring-2 ring-emerald-500/20'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <div className={`w-5 h-5 rounded-lg flex items-center justify-center border transition-colors ${
+                  isCompleted
+                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+                }`}>
+                  {isCompleted && <CheckCircle2 className="w-3.5 h-3.5" />}
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">
+                    เสร็จสิ้นการสอบแล้ว
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    ทำเครื่องหมายเมื่อสอบวิชานี้เสร็จสิ้นแล้ว
+                  </span>
+                </div>
+              </div>
+              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-xl transition-colors ${
+                isCompleted
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}>
+                {isCompleted ? '✓ สอบเสร็จแล้ว' : 'ยังไม่สอบ'}
+              </span>
             </div>
 
             {/* Action Buttons directly after the form fields */}

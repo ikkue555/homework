@@ -24,7 +24,9 @@ import {
   RefreshCw,
   Cloud,
   Save,
-  Award
+  Award,
+  Eye,
+  X
 } from 'lucide-react';
 import { ExamSchedule, ExamTopic, UserProfile } from '../types';
 import { 
@@ -47,7 +49,7 @@ interface ExamScheduleViewProps {
   onCloseExternalAdd?: () => void;
 }
 
-type FilterType = 'all' | 'กลางภาค' | 'ปลายภาค' | 'เก็บคะแนน';
+type FilterType = 'all' | 'pending' | 'completed' | 'กลางภาค' | 'ปลายภาค' | 'เก็บคะแนน';
 type DesktopViewMode = 'split' | 'table';
 
 export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
@@ -68,6 +70,10 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
   
   // Selected Exam for Split View & Detail Modal
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
+
+  // Mobile Exam Detail Modal State
+  const [mobileDetailExamId, setMobileDetailExamId] = useState<string | null>(null);
+  const [mobileQuickTopicText, setMobileQuickTopicText] = useState('');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -93,8 +99,20 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
   // Sorted and Filtered Exams
   const filteredExams = useMemo(() => {
     return exams.filter((exam) => {
+      // Completed / Pending status filter
+      if (selectedFilter === 'completed' && !exam.isCompleted) {
+        return false;
+      }
+      if (selectedFilter === 'pending' && exam.isCompleted) {
+        return false;
+      }
       // Type filter
-      if (selectedFilter !== 'all' && !exam.examType?.includes(selectedFilter)) {
+      if (
+        selectedFilter !== 'all' && 
+        selectedFilter !== 'completed' && 
+        selectedFilter !== 'pending' && 
+        !exam.examType?.includes(selectedFilter)
+      ) {
         return false;
       }
       // Search query
@@ -120,17 +138,27 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
     return filteredExams.length > 0 ? filteredExams[0] : null;
   }, [selectedExamId, exams, filteredExams]);
 
+  // Selected exam for Mobile Detail Modal
+  const mobileDetailExam = useMemo(() => {
+    if (!mobileDetailExamId) return null;
+    return exams.find((e) => e.id === mobileDetailExamId) || null;
+  }, [mobileDetailExamId, exams]);
+
   // Overall Statistics
   const stats = useMemo(() => {
     let upcomingCount = 0;
     let todayCount = 0;
+    let completedExamsCount = 0;
     let totalTopics = 0;
     let completedTopics = 0;
 
     exams.forEach((exam) => {
-      const countdown = getExamCountdown(exam.date);
-      if (countdown.status === 'today') todayCount++;
-      if (countdown.status === 'today' || countdown.status === 'tomorrow' || countdown.status === 'upcoming') {
+      if (exam.isCompleted) {
+        completedExamsCount++;
+      }
+      const countdown = getExamCountdown(exam.date, exam.isCompleted);
+      if (!exam.isCompleted && countdown.status === 'today') todayCount++;
+      if (!exam.isCompleted && (countdown.status === 'today' || countdown.status === 'tomorrow' || countdown.status === 'upcoming')) {
         upcomingCount++;
       }
       if (exam.topics) {
@@ -143,6 +171,8 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
 
     return {
       total: exams.length,
+      completedExams: completedExamsCount,
+      pendingExams: exams.length - completedExamsCount,
       upcoming: upcomingCount,
       today: todayCount,
       topicPercent,
@@ -150,6 +180,29 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
       totalTopics,
     };
   }, [exams]);
+
+  const handleToggleExamCompleted = async (targetExam: ExamSchedule, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!targetExam) return;
+    const newCompleted = !targetExam.isCompleted;
+    const updatedExam: ExamSchedule = {
+      ...targetExam,
+      isCompleted: newCompleted,
+      completedAt: newCompleted ? new Date().toISOString() : undefined,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setAutoSaveStatus('saving');
+    try {
+      await onSaveExam(updatedExam);
+      setAutoSaveStatus('saved');
+      const nowStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastAutoSaveTime(nowStr);
+    } catch (err) {
+      console.error('Failed to toggle exam completion:', err);
+      setAutoSaveStatus('idle');
+    }
+  };
 
   const toggleCardExpansion = (id: string) => {
     setExpandedCardIds(prev => ({ ...prev, [id]: !prev[id] }));
@@ -200,26 +253,24 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
     }
   };
 
-  const handleQuickAddTopicToSelected = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedExam || !quickTopicText.trim()) return;
+  const handleQuickAddTopic = async (targetExam: ExamSchedule, title: string) => {
+    if (!targetExam || !title.trim()) return;
 
     setAutoSaveStatus('saving');
     const newTopic: ExamTopic = {
       id: 'top_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-      title: quickTopicText.trim(),
+      title: title.trim(),
       completed: false,
     };
 
     const updatedExam: ExamSchedule = {
-      ...selectedExam,
-      topics: [...(selectedExam.topics || []), newTopic],
+      ...targetExam,
+      topics: [...(targetExam.topics || []), newTopic],
       updatedAt: new Date().toISOString(),
     };
 
     try {
       await onSaveExam(updatedExam);
-      setQuickTopicText('');
       setAutoSaveStatus('saved');
       const nowStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       setLastAutoSaveTime(nowStr);
@@ -229,12 +280,12 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
     }
   };
 
-  const handleRemoveTopicFromSelected = async (topicId: string) => {
-    if (!selectedExam) return;
+  const handleRemoveTopic = async (targetExam: ExamSchedule, topicId: string) => {
+    if (!targetExam) return;
     setAutoSaveStatus('saving');
     const updatedExam: ExamSchedule = {
-      ...selectedExam,
-      topics: (selectedExam.topics || []).filter(t => t.id !== topicId),
+      ...targetExam,
+      topics: (targetExam.topics || []).filter(t => t.id !== topicId),
       updatedAt: new Date().toISOString(),
     };
 
@@ -247,6 +298,18 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
       console.error('Failed to remove topic:', err);
       setAutoSaveStatus('idle');
     }
+  };
+
+  const handleQuickAddTopicToSelected = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedExam || !quickTopicText.trim()) return;
+    await handleQuickAddTopic(selectedExam, quickTopicText);
+    setQuickTopicText('');
+  };
+
+  const handleRemoveTopicFromSelected = async (topicId: string) => {
+    if (!selectedExam) return;
+    await handleRemoveTopic(selectedExam, topicId);
   };
 
   const handleConfirmClearAll = async () => {
@@ -335,10 +398,16 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
         </div>
 
         {/* Mini Stats Bar */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="mt-5 pt-4 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="p-2.5 rounded-2xl bg-slate-800/40 border border-slate-800">
             <span className="text-[11px] font-semibold text-slate-400">วิชาสอบทั้งหมด</span>
             <div className="text-lg font-black text-white mt-0.5">{stats.total} วิชา</div>
+          </div>
+          <div className="p-2.5 rounded-2xl bg-slate-800/40 border border-slate-800">
+            <span className="text-[11px] font-semibold text-emerald-400">สอบเสร็จสิ้นแล้ว</span>
+            <div className="text-lg font-black text-emerald-400 mt-0.5">
+              {stats.completedExams} <span className="text-[11px] font-normal text-slate-400">/ {stats.total} วิชา</span>
+            </div>
           </div>
           <div className="p-2.5 rounded-2xl bg-slate-800/40 border border-slate-800">
             <span className="text-[11px] font-semibold text-amber-400">ความคืบหน้าอ่านหนังสือ</span>
@@ -371,12 +440,14 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
           )}
         </div>
 
-        {/* Type Filter Buttons */}
+        {/* Type & Status Filter Buttons */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {(['all', 'กลางภาค', 'ปลายภาค', 'เก็บคะแนน'] as FilterType[]).map((filterVal) => {
+          {(['all', 'pending', 'completed', 'กลางภาค', 'ปลายภาค', 'เก็บคะแนน'] as FilterType[]).map((filterVal) => {
             const isSelected = selectedFilter === filterVal;
             const labelMap: Record<FilterType, string> = {
               all: 'ทั้งหมด',
+              pending: 'รอสอบ',
+              completed: '✓ สอบเสร็จแล้ว',
               'กลางภาค': 'กลางภาค',
               'ปลายภาค': 'ปลายภาค',
               'เก็บคะแนน': 'เก็บคะแนน',
@@ -387,7 +458,9 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                 onClick={() => setSelectedFilter(filterVal)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-rose-600 text-white shadow-xs'
+                    ? filterVal === 'completed' 
+                      ? 'bg-emerald-600 text-white shadow-xs' 
+                      : 'bg-rose-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
@@ -452,7 +525,7 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
       {filteredExams.length > 0 && (
         <div className="md:hidden space-y-3 print:hidden">
           {filteredExams.map((exam) => {
-            const countdown = getExamCountdown(exam.date);
+            const countdown = getExamCountdown(exam.date, exam.isCompleted);
             const badge = getExamTypeBadgeProps(exam.examType);
             const progress = getTopicsProgress(exam.topics);
             const isExpanded = Boolean(expandedCardIds[exam.id]);
@@ -460,9 +533,14 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
             return (
               <div
                 key={exam.id}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm hover:border-rose-500/50 transition-all space-y-3"
+                onClick={() => setMobileDetailExamId(exam.id)}
+                className={`bg-white dark:bg-slate-900 rounded-2xl border p-4 shadow-sm hover:shadow-md transition-all space-y-3 cursor-pointer active:scale-[0.99] group ${
+                  exam.isCompleted
+                    ? 'border-emerald-300/80 dark:border-emerald-800/80 bg-emerald-50/10'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-rose-500/50'
+                }`}
               >
-                {/* Top Row: Type Badge + Score Badge + Countdown Badge */}
+                {/* Top Row: Type Badge + Score Badge + Countdown Badge & View Indicator */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
@@ -475,14 +553,19 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                       </span>
                     )}
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] ${countdown.badgeClasses}`}>
-                    {countdown.label}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] ${countdown.badgeClasses}`}>
+                      {countdown.label}
+                    </span>
+                    <span className="text-[11px] text-rose-600 dark:text-rose-400 font-bold hidden xs:inline-flex items-center gap-0.5">
+                      ดูรายละเอียด <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
                 </div>
 
                 {/* Subject Name */}
                 <div>
-                  <h3 className="text-base font-bold font-heading text-slate-900 dark:text-slate-100">
+                  <h3 className="text-base font-bold font-heading text-slate-900 dark:text-slate-100 group-hover:text-rose-600 transition-colors">
                     {exam.subject}
                   </h3>
                   <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -548,7 +631,11 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                 {exam.topics && exam.topics.length > 0 && (
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                     <button
-                      onClick={() => toggleCardExpansion(exam.id)}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCardExpansion(exam.id);
+                      }}
                       className="w-full flex items-center justify-between py-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-500 cursor-pointer"
                     >
                       <span>ขอบเขตเนื้อหา ({exam.topics.length} หัวข้อ)</span>
@@ -560,7 +647,10 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                         {exam.topics.map((t, idx) => (
                           <div
                             key={t.id}
-                            onClick={() => handleToggleTopicWithAutoSave(exam.id, t.id, !t.completed)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleTopicWithAutoSave(exam.id, t.id, !t.completed);
+                            }}
                             className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 cursor-pointer active:scale-[0.99] transition-transform"
                           >
                             <div className={`w-4 h-4 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
@@ -582,7 +672,7 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                   </div>
                 )}
 
-                {/* Score highlight (แทนหมายเหตุเดิม) */}
+                {/* Score highlight */}
                 {exam.score && (
                   <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 font-bold">
@@ -596,21 +686,54 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                 )}
 
                 {/* Card Action Buttons */}
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    onClick={() => handleOpenEditModal(exam)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>แก้ไข</span>
-                  </button>
-                  <button
-                    onClick={() => setExamToDelete(exam)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 flex items-center gap-1 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>ลบ</span>
-                  </button>
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleExamCompleted(exam, e)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                        exam.isCompleted
+                          ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                      }`}
+                      title={exam.isCompleted ? 'คลิกเพื่อยกเลิกสถานะเสร็จสิ้น' : 'ทำเครื่องหมายว่าสอบเสร็จสิ้นแล้ว'}
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 ${exam.isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-white'}`} />
+                      <span>{exam.isCompleted ? '✓ สอบเสร็จแล้ว' : 'เสร็จสิ้นการสอบ'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMobileDetailExamId(exam.id);
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>รายละเอียด</span>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => handleOpenEditModal(exam, e)}
+                      className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center cursor-pointer"
+                      title="แก้ไข"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExamToDelete(exam);
+                      }}
+                      className="p-1.5 rounded-xl text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 flex items-center cursor-pointer"
+                      title="ลบ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -630,7 +753,7 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
 
             {filteredExams.map((exam) => {
               const isSelected = selectedExam?.id === exam.id;
-              const countdown = getExamCountdown(exam.date);
+              const countdown = getExamCountdown(exam.date, exam.isCompleted);
               const badge = getExamTypeBadgeProps(exam.examType);
               const progress = getTopicsProgress(exam.topics);
 
@@ -641,7 +764,9 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                   className={`relative p-4 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-white dark:bg-slate-900 border-rose-500 shadow-md ring-2 ring-rose-500/20'
-                      : 'bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
+                      : exam.isCompleted
+                        ? 'bg-white dark:bg-slate-900/90 border-emerald-300/70 dark:border-emerald-800/70 shadow-xs'
+                        : 'bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -716,7 +841,7 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
               <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-xl space-y-4">
                 {/* Header with Countdown & Badges */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getExamTypeBadgeProps(selectedExam.examType).bg} ${getExamTypeBadgeProps(selectedExam.examType).text} ${getExamTypeBadgeProps(selectedExam.examType).border}`}>
                         {selectedExam.examType}
@@ -728,9 +853,24 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                         </span>
                       )}
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs ${getExamCountdown(selectedExam.date).badgeClasses}`}>
-                      {getExamCountdown(selectedExam.date).label}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleExamCompleted(selectedExam)}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                          selectedExam.isCompleted
+                            ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200'
+                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                        }`}
+                        title={selectedExam.isCompleted ? 'คลิกเพื่อยกเลิกสถานะเสร็จสิ้น' : 'ทำเครื่องหมายว่าสอบเสร็จสิ้นแล้ว'}
+                      >
+                        <CheckCircle2 className={`w-3.5 h-3.5 ${selectedExam.isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-white'}`} />
+                        <span>{selectedExam.isCompleted ? '✓ สอบเสร็จแล้ว' : 'เสร็จสิ้นการสอบ'}</span>
+                      </button>
+                      <span className={`px-2.5 py-1 rounded-xl text-xs ${getExamCountdown(selectedExam.date, selectedExam.isCompleted).badgeClasses}`}>
+                        {getExamCountdown(selectedExam.date, selectedExam.isCompleted).label}
+                      </span>
+                    </div>
                   </div>
 
                   <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-slate-100">
@@ -869,6 +1009,19 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                 <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
+                      onClick={() => handleToggleExamCompleted(selectedExam)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                        selectedExam.isCompleted
+                          ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                      }`}
+                      title={selectedExam.isCompleted ? 'คลิกเพื่อยกเลิกสถานะเสร็จสิ้น' : 'ทำเครื่องหมายว่าสอบเสร็จสิ้นแล้ว'}
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 ${selectedExam.isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-white'}`} />
+                      <span>{selectedExam.isCompleted ? '✓ สอบเสร็จแล้ว' : 'เสร็จสิ้นการสอบ'}</span>
+                    </button>
+                    <button
                       onClick={() => handleOpenEditModal(selectedExam)}
                       className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors"
                     >
@@ -923,14 +1076,18 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredExams.map((exam) => {
-                  const countdown = getExamCountdown(exam.date);
+                  const countdown = getExamCountdown(exam.date, exam.isCompleted);
                   const badge = getExamTypeBadgeProps(exam.examType);
                   const progress = getTopicsProgress(exam.topics);
 
                   return (
                     <tr 
                       key={exam.id} 
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                      className={`transition-colors cursor-pointer ${
+                        exam.isCompleted
+                          ? 'bg-emerald-50/30 dark:bg-emerald-950/20 hover:bg-emerald-50/50'
+                          : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'
+                      }`}
                       onClick={() => {
                         setSelectedExamId(exam.id);
                         setDesktopViewMode('split');
@@ -981,6 +1138,18 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
                       </td>
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleToggleExamCompleted(exam, e)}
+                            className={`p-1.5 rounded-lg cursor-pointer transition-colors ${
+                              exam.isCompleted
+                                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100'
+                                : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                            }`}
+                            title={exam.isCompleted ? 'ยกเลิกสถานะเสร็จสิ้น' : 'ทำเครื่องหมายว่าสอบเสร็จสิ้นแล้ว'}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => handleOpenEditModal(exam)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -1071,6 +1240,308 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
           * ตรวจสอบความถูกต้องของตารางสอบและเตรียมอุปกรณ์การสอบให้พร้อมก่อนเริ่มสอบ 15 นาที
         </div>
       </div>
+
+      {/* 7.5 Mobile Exam Detail Modal / Bottom Sheet */}
+      {mobileDetailExam && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fadeIn print:hidden"
+          onClick={() => setMobileDetailExamId(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col max-h-[90vh] animate-scaleUp overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Grab handle for touch dragging on mobile */}
+            <div className="pt-3 pb-1 flex justify-center sm:hidden">
+              <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+            </div>
+
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                      getExamTypeBadgeProps(mobileDetailExam.examType).bg
+                    } ${getExamTypeBadgeProps(mobileDetailExam.examType).text} ${
+                      getExamTypeBadgeProps(mobileDetailExam.examType).border
+                    }`}
+                  >
+                    {getExamTypeBadgeProps(mobileDetailExam.examType).label}
+                  </span>
+                  {mobileDetailExam.score && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      <Award className="w-3 h-3 text-amber-500" />
+                      <span>{mobileDetailExam.score}</span>
+                    </span>
+                  )}
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[11px] ${
+                      getExamCountdown(mobileDetailExam.date, mobileDetailExam.isCompleted).badgeClasses
+                    }`}
+                  >
+                    {getExamCountdown(mobileDetailExam.date, mobileDetailExam.isCompleted).label}
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold font-heading text-slate-900 dark:text-slate-100 break-words">
+                  {mobileDetailExam.subject}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileDetailExamId(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
+                aria-label="ปิดหน้ารายละเอียด"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+              {/* Date & Time block */}
+              <div className="p-3.5 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
+                  <CalendarIcon className="w-4 h-4 text-rose-500 shrink-0" />
+                  <span>{formatThaiExamDate(mobileDetailExam.date, 'full')}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
+                  <Clock className="w-4 h-4 text-rose-500 shrink-0" />
+                  <span>เวลา {mobileDetailExam.startTime} - {mobileDetailExam.endTime} น.</span>
+                </div>
+              </div>
+
+              {/* Venue details grid */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
+                  <span className="text-[10px] text-slate-400 block mb-0.5">อาคาร</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block">
+                    {mobileDetailExam.building || '-'}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
+                  <span className="text-[10px] text-slate-400 block mb-0.5">ห้องสอบ</span>
+                  <span className="text-xs font-bold text-rose-600 dark:text-rose-400 truncate block">
+                    {mobileDetailExam.room || '-'}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center">
+                  <span className="text-[10px] text-slate-400 block mb-0.5">เลขที่นั่ง</span>
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 truncate block">
+                    {mobileDetailExam.seatNumber || '-'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Reading Progress */}
+              {mobileDetailExam.topics && mobileDetailExam.topics.length > 0 && (
+                <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-rose-500" />
+                      ความคืบหน้าอ่านหนังสือ
+                    </span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-100">
+                      {getTopicsProgress(mobileDetailExam.topics).completed}/
+                      {getTopicsProgress(mobileDetailExam.topics).total} หัวข้อ (
+                      {getTopicsProgress(mobileDetailExam.topics).percent}%)
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 rounded-full ${
+                        getTopicsProgress(mobileDetailExam.topics).percent === 100
+                          ? 'bg-emerald-500'
+                          : 'bg-rose-600'
+                      }`}
+                      style={{ width: `${getTopicsProgress(mobileDetailExam.topics).percent}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Topics & Reading Checklist */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-rose-500" />
+                    <span>ขอบเขตเนื้อหาที่สอบ ({mobileDetailExam.topics?.length || 0} หัวข้อ)</span>
+                  </span>
+                  {autoSaveStatus !== 'idle' && (
+                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                      {autoSaveStatus === 'saving' ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin text-rose-500" />
+                          <span>กำลังบันทึก...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Cloud className="w-3 h-3 text-emerald-500" />
+                          <span>บันทึกแล้ว {lastAutoSaveTime}</span>
+                        </>
+                      )}
+                    </span>
+                  )}
+                </div>
+
+                {/* Topics list */}
+                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-0.5">
+                  {mobileDetailExam.topics && mobileDetailExam.topics.length > 0 ? (
+                    mobileDetailExam.topics.map((t, idx) => (
+                      <div
+                        key={t.id}
+                        className="group flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 hover:border-rose-300 transition-colors"
+                      >
+                        <div
+                          onClick={() =>
+                            handleToggleTopicWithAutoSave(mobileDetailExam.id, t.id, !t.completed)
+                          }
+                          className="flex items-center space-x-2.5 flex-1 cursor-pointer min-w-0"
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
+                              t.completed
+                                ? 'bg-rose-600 border-rose-600 text-white'
+                                : 'border-slate-300 dark:border-slate-600'
+                            }`}
+                          >
+                            {t.completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                          </div>
+                          <span
+                            className={`text-xs break-words ${
+                              t.completed
+                                ? 'line-through text-slate-400 dark:text-slate-500'
+                                : 'text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            {idx + 1}. {t.title}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTopic(mobileDetailExam, t.id)}
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
+                          title="ลบหัวข้อนี้"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 italic py-4 text-center bg-slate-50 dark:bg-slate-800/40 rounded-xl">
+                      ยังไม่มีหัวข้อเนื้อหา สามารถพิมพ์เพิ่มได้ที่ช่องด้านล่าง
+                    </p>
+                  )}
+                </div>
+
+                {/* Quick Add Topic form inside Mobile Detail */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!mobileQuickTopicText.trim()) return;
+                    handleQuickAddTopic(mobileDetailExam, mobileQuickTopicText);
+                    setMobileQuickTopicText('');
+                  }}
+                  className="flex gap-1.5 pt-1"
+                >
+                  <input
+                    type="text"
+                    value={mobileQuickTopicText}
+                    onChange={(e) => setMobileQuickTopicText(e.target.value)}
+                    placeholder="+ เพิ่มหัวข้อย่อยเนื้อหา..."
+                    className="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!mobileQuickTopicText.trim()}
+                    className="px-4 py-2 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 text-white text-xs font-bold disabled:opacity-40 cursor-pointer shrink-0"
+                  >
+                    เพิ่ม
+                  </button>
+                </form>
+              </div>
+
+              {/* Score / Note */}
+              {mobileDetailExam.score && (
+                <div className="p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/25 border border-amber-200/70 dark:border-amber-900/40 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span className="font-bold text-amber-900 dark:text-amber-200">คะแนนที่สอบ</span>
+                  </div>
+                  <span className="font-extrabold text-amber-700 dark:text-amber-300">
+                    {mobileDetailExam.score}
+                  </span>
+                </div>
+              )}
+
+              {/* Calendar shortcut */}
+              {onNavigateToCalendar && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = mobileDetailExam.date;
+                    setMobileDetailExamId(null);
+                    onNavigateToCalendar(d);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <span>ดูวิชานี้ในหน้าปฏิทิน</span>
+                  <ArrowRight className="w-3 h-3 ml-1" />
+                </button>
+              )}
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+              <button
+                type="button"
+                onClick={() => handleToggleExamCompleted(mobileDetailExam)}
+                className={`py-2.5 px-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-xs ${
+                  mobileDetailExam.isCompleted
+                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
+                title={mobileDetailExam.isCompleted ? 'คลิกเพื่อยกเลิกสถานะเสร็จสิ้น' : 'ทำเครื่องหมายว่าสอบเสร็จสิ้นแล้ว'}
+              >
+                <CheckCircle2 className={`w-4 h-4 ${mobileDetailExam.isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-white'}`} />
+                <span>{mobileDetailExam.isCompleted ? '✓ สอบเสร็จแล้ว' : 'เสร็จสิ้นการสอบ'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const examToEdit = mobileDetailExam;
+                  setMobileDetailExamId(null);
+                  handleOpenEditModal(examToEdit);
+                }}
+                className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                <span>แก้ไขข้อมูล</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const examDel = mobileDetailExam;
+                  setMobileDetailExamId(null);
+                  setExamToDelete(examDel);
+                }}
+                className="py-2.5 px-3 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>ลบ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileDetailExamId(null)}
+                className="py-2.5 px-4 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 8. Add / Edit Modal */}
       {isModalOpen && (

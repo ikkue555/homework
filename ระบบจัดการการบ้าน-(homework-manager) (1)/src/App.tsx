@@ -45,6 +45,7 @@ import {
   deleteExamFromCloud,
   clearAllUserExamsFromCloud
 } from './lib/firebase';
+import { loadStoredExams, saveStoredExams } from './data/mockData';
 import { Header } from './components/Header';
 import { StatsOverview } from './components/StatsOverview';
 import { HomeworkFilters } from './components/HomeworkFilters';
@@ -288,23 +289,53 @@ export default function App() {
 
     setIsHomeworksLoading(true);
 
-    // One-time automatic purge of previous exams as requested by user
-    const EXAM_PURGE_STORAGE_KEY = 'purged_all_exams_user_request_v1';
-    if (!localStorage.getItem(EXAM_PURGE_STORAGE_KEY)) {
-      localStorage.setItem(EXAM_PURGE_STORAGE_KEY, 'true');
-      clearAllUserExamsFromCloud(userProfile.uid)
-        .then(() => {
-          setExams([]);
-        })
-        .catch((err) => {
-          console.warn("Initial exam purge notice:", err);
-        });
+    // Load cached exams immediately for instant rendering while cloud syncs
+    const cachedExams = loadStoredExams(userProfile.uid);
+    if (cachedExams && cachedExams.length > 0) {
+      setExams(cachedExams);
     }
 
     const unsubExams = subscribeToUserExams(
       userProfile.uid,
       (examsData) => {
-        setExams(examsData);
+        if (examsData.length > 0) {
+          // Check if there are local cached exams not yet uploaded to cloud
+          const currentLocal = loadStoredExams(userProfile.uid);
+          const cloudIds = new Set(examsData.map((e) => e.id));
+          const unsyncedLocals = currentLocal.filter((e) => !cloudIds.has(e.id));
+
+          if (unsyncedLocals.length > 0) {
+            // Push unsynced local exams to cloud in background
+            unsyncedLocals.forEach((localExam) => {
+              saveExamToCloud(userProfile.uid, localExam).catch((err) => {
+                console.warn('Background sync exam to cloud notice:', err);
+              });
+            });
+            const merged = [...examsData, ...unsyncedLocals].sort((a, b) => {
+              if (a.date !== b.date) return a.date.localeCompare(b.date);
+              return (a.startTime || '').localeCompare(b.startTime || '');
+            });
+            setExams(merged);
+            saveStoredExams(userProfile.uid, merged);
+          } else {
+            setExams(examsData);
+            saveStoredExams(userProfile.uid, examsData);
+          }
+        } else {
+          // Cloud returned 0 exams: check if local cache has exams to preserve & upload
+          const currentLocal = loadStoredExams(userProfile.uid);
+          if (currentLocal.length > 0) {
+            setExams(currentLocal);
+            currentLocal.forEach((localExam) => {
+              saveExamToCloud(userProfile.uid, localExam).catch((err) => {
+                console.warn('Background sync cached exam to cloud notice:', err);
+              });
+            });
+          } else {
+            setExams([]);
+            saveStoredExams(userProfile.uid, []);
+          }
+        }
       },
       (error) => {
         console.warn("Exams subscription notice (operating in offline/cached mode):", error);
@@ -602,28 +633,58 @@ export default function App() {
   // Exam Schedule Handlers
   const handleSaveExam = async (exam: ExamSchedule) => {
     if (!userProfile) return;
+
+    // 1. Ensure solid ID & timestamps
+    const finalExam: ExamSchedule = {
+      ...exam,
+      id: exam.id || ('exam_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7)),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 2. Optimistically update local state immediately so user sees it right away
+    setExams((prev) => {
+      const exists = prev.some((e) => e.id === finalExam.id);
+      const updated = exists
+        ? prev.map((e) => (e.id === finalExam.id ? finalExam : e))
+        : [...prev, finalExam];
+      const sorted = updated.sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return (a.startTime || '').localeCompare(b.startTime || '');
+      });
+      saveStoredExams(userProfile.uid, sorted);
+      return sorted;
+    });
+
     try {
-      await saveExamToCloud(userProfile.uid, exam);
+      // 3. Persist to Firestore Cloud
+      await saveExamToCloud(userProfile.uid, finalExam);
       addToast(
         'บันทึกตารางสอบสำเร็จ 🎓',
-        `บันทึกข้อมูลการสอบวิชา ${exam.subject} เรียบร้อยแล้ว`,
+        `บันทึกข้อมูลการสอบวิชา ${finalExam.subject} เรียบร้อยแล้ว`,
         'success',
         { actionTab: 'exam' }
       );
     } catch (err: any) {
-      console.error('Save exam error:', err);
+      console.error('Save exam cloud sync notice:', err);
       addToast(
-        'เกิดข้อผิดพลาดในการบันทึก',
-        err?.message || 'ไม่สามารถบันทึกตารางสอบได้ กรุณาลองใหม่อีกครั้ง',
-        'error',
-        { recordNotification: false }
+        'บันทึกข้อมูลลงเครื่องสำเร็จ (รอซิงค์คลาวด์)',
+        'ข้อมูลตารางสอบถูกบันทึกในเครื่องเรียบร้อยแล้ว และจะเชื่อมต่อกับคลาวด์อัตโนมัติ',
+        'info',
+        { actionTab: 'exam', recordNotification: false }
       );
-      throw err;
     }
   };
 
   const handleDeleteExam = async (examId: string) => {
     if (!userProfile) return;
+
+    // Optimistically remove from state & local storage
+    setExams((prev) => {
+      const updated = prev.filter((e) => e.id !== examId);
+      saveStoredExams(userProfile.uid, updated);
+      return updated;
+    });
+
     try {
       await deleteExamFromCloud(userProfile.uid, examId);
       addToast(
@@ -659,23 +720,32 @@ export default function App() {
       updatedAt: new Date().toISOString(),
     };
 
-    // Optimistic state update
-    setExams(prev => prev.map(e => e.id === examId ? updatedExam : e));
+    // Optimistic state update & cache
+    setExams(prev => {
+      const updated = prev.map(e => e.id === examId ? updatedExam : e);
+      saveStoredExams(userProfile.uid, updated);
+      return updated;
+    });
 
     try {
       await saveExamToCloud(userProfile.uid, updatedExam);
     } catch (err) {
       console.error('Failed to toggle exam topic:', err);
       // Revert if error
-      setExams(prev => prev.map(e => e.id === examId ? targetExam : e));
+      setExams(prev => {
+        const reverted = prev.map(e => e.id === examId ? targetExam : e);
+        saveStoredExams(userProfile.uid, reverted);
+        return reverted;
+      });
     }
   };
 
   const handleClearAllExams = async () => {
     if (!userProfile) return;
+    setExams([]);
+    saveStoredExams(userProfile.uid, []);
     try {
       await clearAllUserExamsFromCloud(userProfile.uid);
-      setExams([]);
       addToast(
         'ลบข้อมูลตารางสอบทั้งหมดแล้ว 🗑️',
         'ล้างรายการสอบและข้อมูลทั้งหมดออกจากระบบเรียบร้อยแล้ว',

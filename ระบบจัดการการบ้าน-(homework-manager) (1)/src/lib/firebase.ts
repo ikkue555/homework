@@ -678,9 +678,17 @@ export function subscribeToUserExams(
           room: data.room || undefined,
           building: data.building || undefined,
           seatNumber: data.seatNumber || undefined,
-          topics: Array.isArray(data.topics) ? data.topics : [],
+          score: data.score || undefined,
+          topics: Array.isArray(data.topics) ? data.topics.map((t: any) => ({
+            id: t.id || 'top_' + Math.random().toString(36).substring(2, 6),
+            title: t.title || '',
+            completed: Boolean(t.completed),
+            ...(t.notes ? { notes: t.notes } : {}),
+          })) : [],
           color: data.color || undefined,
           notes: data.notes || undefined,
+          isCompleted: Boolean(data.isCompleted),
+          completedAt: data.completedAt || undefined,
           createdAt: data.createdAt || new Date().toISOString(),
           updatedAt: data.updatedAt || undefined,
         } as ExamSchedule;
@@ -708,18 +716,41 @@ export function subscribeToUserExams(
  */
 export async function saveExamToCloud(userId: string, exam: ExamSchedule): Promise<void> {
   if (!userId) return;
-  const examId = exam.id || Date.now().toString();
+  const examId = exam.id || ('exam_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
   const docRef = doc(db, 'users', userId, 'exams', examId);
-  const payload: Record<string, any> = { 
-    ...exam, 
+  
+  const cleanedTopics = Array.isArray(exam.topics)
+    ? exam.topics.map((t) => ({
+        id: t.id || ('top_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+        title: (t.title || '').trim(),
+        completed: Boolean(t.completed),
+        ...(t.notes && t.notes.trim() ? { notes: t.notes.trim() } : {}),
+      }))
+    : [];
+
+  const rawPayload: Record<string, any> = { 
     id: examId,
-    updatedAt: new Date().toISOString()
+    subject: exam.subject.trim(),
+    examType: exam.examType || 'กลางภาค',
+    date: exam.date,
+    startTime: exam.startTime || '',
+    endTime: exam.endTime || '',
+    topics: cleanedTopics,
+    createdAt: exam.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
-  Object.keys(payload).forEach((key) => {
-    if (payload[key] === undefined) {
-      delete payload[key];
-    }
-  });
+
+  if (exam.room && exam.room.trim()) rawPayload.room = exam.room.trim();
+  if (exam.building && exam.building.trim()) rawPayload.building = exam.building.trim();
+  if (exam.seatNumber && exam.seatNumber.trim()) rawPayload.seatNumber = exam.seatNumber.trim();
+  if (exam.score && exam.score.trim()) rawPayload.score = exam.score.trim();
+  if (exam.color && exam.color.trim()) rawPayload.color = exam.color.trim();
+  if (exam.notes && exam.notes.trim()) rawPayload.notes = exam.notes.trim();
+  if (exam.isCompleted !== undefined) rawPayload.isCompleted = Boolean(exam.isCompleted);
+  if (exam.completedAt) rawPayload.completedAt = exam.completedAt;
+
+  // Strip any accidental undefined properties at any level
+  const payload = JSON.parse(JSON.stringify(rawPayload));
   await setDoc(docRef, payload, { merge: true });
 }
 

@@ -25,7 +25,17 @@ const THAI_DAYS = [
 /**
  * Calculate countdown status and days remaining
  */
-export function getExamCountdown(dateStr: string): ExamCountdownInfo {
+export function getExamCountdown(dateStr: string, isCompleted?: boolean): ExamCountdownInfo {
+  if (isCompleted) {
+    return {
+      status: 'past',
+      label: '✓ สอบเสร็จสิ้นแล้ว',
+      diffDays: 0,
+      badgeClasses: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-bold',
+      urgent: false,
+    };
+  }
+
   if (!dateStr) {
     return {
       status: 'upcoming',

@@ -97,6 +97,8 @@ export interface ExamSchedule {
   topics: ExamTopic[];         // ขอบเขตเนื้อหาที่สอบ พร้อมระบบ Checkbox
   color?: string;              // สีประจำวิชา
   notes?: string;              // บันทึกเพิ่มเติม
+  isCompleted?: boolean;        // สถานะเสร็จสิ้นการสอบแล้ว
+  completedAt?: string;        // วันเวลาที่เสร็จสิ้นการสอบ
   createdAt: string;
   updatedAt?: string;
 }

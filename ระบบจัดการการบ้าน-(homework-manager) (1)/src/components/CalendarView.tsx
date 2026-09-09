@@ -10,9 +10,19 @@ import {
   Edit3, 
   Trash2, 
   MapPin,
-  GraduationCap
+  GraduationCap,
+  Palette,
+  Sparkles
 } from 'lucide-react';
 import { Homework, CalendarEvent, ExamSchedule } from '../types';
+import { 
+  CalendarTheme, 
+  getSavedCalendarTheme, 
+  saveCalendarTheme, 
+  hexToRgba, 
+  getContrastTextColor 
+} from '../lib/calendarTheme';
+import { CalendarThemeModal } from './CalendarThemeModal';
 
 interface CalendarViewProps {
   homeworks: Homework[];
@@ -50,6 +60,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(
     today.toISOString().split('T')[0]
   );
+  const [calendarTheme, setCalendarTheme] = useState<CalendarTheme>(getSavedCalendarTheme);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+
+  const handleSaveTheme = (newTheme: CalendarTheme) => {
+    setCalendarTheme(newTheme);
+    saveCalendarTheme(newTheme);
+  };
 
   // Automatically update and reset to current month & today's date upon entering Calendar view
   useEffect(() => {
@@ -119,7 +136,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 text-2xl">
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md text-2xl transition-all"
+              style={{
+                background: calendarTheme.headerStyle === 'gradient'
+                  ? `linear-gradient(135deg, ${calendarTheme.primaryColor}, ${calendarTheme.secondaryColor})`
+                  : calendarTheme.primaryColor,
+                boxShadow: `0 4px 14px ${hexToRgba(calendarTheme.primaryColor, 0.3)}`,
+                color: getContrastTextColor(calendarTheme.primaryColor),
+              }}
+            >
               <CalendarIcon className="w-6 h-6" />
             </div>
             <div>
@@ -127,7 +153,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 <h2 className="text-2xl font-bold font-heading text-slate-850 dark:text-slate-100 flex items-center gap-1.5">
                   <span>{THAI_MONTHS[currentMonth]} {currentYear + 543}</span>
                 </h2>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300">
+                <span 
+                  className="text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors"
+                  style={{
+                    backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.12),
+                    color: calendarTheme.primaryColor,
+                  }}
+                >
                   {currentYear}
                 </span>
               </div>
@@ -144,9 +176,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => setViewMode('month')}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'month' 
-                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs font-bold' 
+                    ? 'bg-white dark:bg-slate-700 shadow-xs font-bold' 
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
+                style={viewMode === 'month' ? { color: calendarTheme.primaryColor } : undefined}
               >
                 มุมมองเดือน
               </button>
@@ -154,9 +187,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => setViewMode('year')}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'year' 
-                    ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs font-bold' 
+                    ? 'bg-white dark:bg-slate-700 shadow-xs font-bold' 
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
+                style={viewMode === 'year' ? { color: calendarTheme.primaryColor } : undefined}
               >
                 ภาพรวม 12 เดือน
               </button>
@@ -173,7 +207,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               </button>
               <button
                 onClick={handleTodayClick}
-                className="px-3 py-1.5 text-xs font-bold font-heading border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 rounded-xl transition-colors cursor-pointer flex items-center space-x-1"
+                className="px-3 py-1.5 text-xs font-bold font-heading rounded-xl transition-colors cursor-pointer flex items-center space-x-1 border"
+                style={{
+                  borderColor: hexToRgba(calendarTheme.primaryColor, 0.4),
+                  backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.08),
+                  color: calendarTheme.primaryColor,
+                }}
               >
                 <span>วันนี้</span>
               </button>
@@ -186,10 +225,38 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               </button>
             </div>
 
+            {/* Custom Theme Switcher Button */}
+            <button
+              onClick={() => setIsThemeModalOpen(true)}
+              className="px-3 py-2 border rounded-xl text-xs font-bold font-heading flex items-center space-x-1.5 transition-all cursor-pointer hover:shadow-xs active:scale-95"
+              style={{
+                borderColor: hexToRgba(calendarTheme.primaryColor, 0.4),
+                backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.08),
+                color: calendarTheme.primaryColor,
+              }}
+              title="ปรับแต่งธีมปฏิทิน (โทนสี, สไตล์, ขอบมน)"
+            >
+              <span 
+                className="w-3.5 h-3.5 rounded-full shrink-0 shadow-2xs border border-white/60"
+                style={{
+                  background: calendarTheme.headerStyle === 'gradient'
+                    ? `linear-gradient(135deg, ${calendarTheme.primaryColor}, ${calendarTheme.secondaryColor})`
+                    : calendarTheme.primaryColor,
+                }}
+              />
+              <Palette className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">ธีม:</span>
+              <span className="max-w-[75px] sm:max-w-none truncate">{calendarTheme.name.split(' ')[0]}</span>
+            </button>
+
             {/* Add Event Button */}
             <button
               onClick={() => onAddEventClick(selectedDateStr || undefined)}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold font-heading shadow-md flex items-center space-x-1.5 cursor-pointer ml-auto sm:ml-0 transition-transform active:scale-95"
+              className="px-3.5 py-2 text-white rounded-xl text-xs font-bold font-heading shadow-md flex items-center space-x-1.5 cursor-pointer ml-auto sm:ml-0 transition-all active:scale-95"
+              style={{
+                backgroundColor: calendarTheme.primaryColor,
+                color: getContrastTextColor(calendarTheme.primaryColor),
+              }}
             >
               <Plus className="w-4 h-4" />
               <span>เพิ่ม Event / กิจกรรม</span>
@@ -208,9 +275,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               }}
               className={`px-3 py-1 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 currentMonth === idx
-                  ? 'bg-sky-600 text-white font-semibold shadow-xs'
-                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-sky-50 dark:hover:bg-slate-700 hover:text-sky-700 dark:hover:text-sky-300 border border-slate-200/60 dark:border-slate-700'
+                  ? 'font-bold shadow-xs'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-200/60 dark:border-slate-700'
               }`}
+              style={currentMonth === idx ? {
+                backgroundColor: calendarTheme.primaryColor,
+                color: getContrastTextColor(calendarTheme.primaryColor),
+              } : undefined}
             >
               {mName}
             </button>
@@ -233,18 +304,28 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   setCurrentMonth(mIdx);
                   setViewMode('month');
                 }}
-                className={`bg-white dark:bg-slate-900 rounded-2xl p-3.5 border transition-all cursor-pointer hover:shadow-md ${
+                className={`bg-white dark:bg-slate-900 ${calendarTheme.cellRounding} p-3.5 border transition-all cursor-pointer hover:shadow-md ${
                   currentMonth === mIdx
-                    ? 'border-sky-500 ring-2 ring-sky-200 dark:ring-sky-800'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700'
+                    ? 'ring-2'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
+                style={currentMonth === mIdx ? {
+                  borderColor: calendarTheme.primaryColor,
+                  boxShadow: `0 0 0 2px ${hexToRgba(calendarTheme.primaryColor, 0.25)}`,
+                } : undefined}
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-bold font-heading text-slate-800 dark:text-slate-200">
                     {mName} {currentYear + 543}
                   </h3>
                   {mIdx === today.getMonth() && currentYear === today.getFullYear() && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 rounded-full">
+                    <span 
+                      className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.12),
+                        color: calendarTheme.primaryColor,
+                      }}
+                    >
                       เดือนนี้
                     </span>
                   )}
@@ -253,7 +334,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 {/* Mini Calendar Grid */}
                 <div className="grid grid-cols-7 gap-1 text-[10px] text-center">
                   {WEEKDAYS.map((w, i) => (
-                    <span key={i} className="text-slate-400 dark:text-slate-500 font-semibold">{w[0]}</span>
+                    <span 
+                      key={i} 
+                      className="font-semibold"
+                      style={
+                        (i === 0 || i === 6) && calendarTheme.weekendStyle === 'theme'
+                          ? { color: calendarTheme.primaryColor }
+                          : undefined
+                      }
+                    >
+                      {w[0]}
+                    </span>
                   ))}
 
                   {/* Empty offsets */}
@@ -274,8 +365,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <span
                         key={dayNum}
                         className={`p-1 rounded-md text-slate-700 dark:text-slate-300 relative flex items-center justify-center ${
-                          isToday ? 'bg-sky-600 text-white font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                          isToday ? 'font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
+                        style={isToday ? {
+                          backgroundColor: calendarTheme.primaryColor,
+                          color: getContrastTextColor(calendarTheme.primaryColor),
+                        } : undefined}
                       >
                         {dayNum}
                         {(hasHw || hasEvt || hasExam) && (
@@ -301,18 +396,35 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
             {/* Weekdays Header */}
             <div className="grid grid-cols-7 gap-2 text-center mb-3">
-              {WEEKDAYS.map((dayName, idx) => (
-                <div
-                  key={idx}
-                  className={`py-2 text-xs font-bold font-heading rounded-xl ${
-                    idx === 0 || idx === 6
-                      ? 'text-rose-600 dark:text-rose-400 bg-rose-50/50 dark:bg-rose-950/30'
-                      : 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800'
-                  }`}
-                >
-                  {dayName}
-                </div>
-              ))}
+              {WEEKDAYS.map((dayName, idx) => {
+                const isWeekend = idx === 0 || idx === 6;
+                let weekendStyleClass = 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800';
+                let customStyle: React.CSSProperties | undefined = undefined;
+
+                if (isWeekend) {
+                  if (calendarTheme.weekendStyle === 'rose') {
+                    weekendStyleClass = 'text-rose-600 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/30';
+                  } else if (calendarTheme.weekendStyle === 'theme') {
+                    weekendStyleClass = 'border border-transparent';
+                    customStyle = {
+                      color: calendarTheme.primaryColor,
+                      backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.08),
+                    };
+                  } else {
+                    weekendStyleClass = 'text-slate-400 dark:text-slate-500 bg-slate-100/60 dark:bg-slate-800/50';
+                  }
+                }
+
+                return (
+                  <div
+                    key={idx}
+                    style={customStyle}
+                    className={`py-2 text-xs font-bold font-heading rounded-xl transition-colors ${weekendStyleClass}`}
+                  >
+                    {dayName}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Days Grid */}
@@ -321,7 +433,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               {Array.from({ length: firstDayOfWeek }).map((_, idx) => (
                 <div
                   key={`empty-${idx}`}
-                  className="min-h-[70px] sm:min-h-[90px] rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-transparent opacity-30"
+                  className={`min-h-[70px] sm:min-h-[90px] ${calendarTheme.cellRounding} bg-slate-50/50 dark:bg-slate-800/30 border border-transparent opacity-30`}
                 />
               ))}
 
@@ -337,28 +449,44 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 const dayEvents = safeEvents.filter(e => e.date === dateStr);
                 const dayExams = safeExams.filter(e => e.date === dateStr);
 
+                // Compute dynamic cell styles based on theme
+                let cellBorderClass = 'border-slate-100 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/60';
+                let cellInlineStyle: React.CSSProperties = {};
+
+                if (isSelected) {
+                  cellInlineStyle = {
+                    borderColor: calendarTheme.primaryColor,
+                    backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.06),
+                    boxShadow: `0 0 0 2px ${hexToRgba(calendarTheme.primaryColor, 0.3)}`,
+                  };
+                } else if (isToday) {
+                  cellInlineStyle = {
+                    borderColor: hexToRgba(calendarTheme.primaryColor, 0.4),
+                    backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.03),
+                  };
+                } else if (dayExams.length > 0) {
+                  cellBorderClass = 'border-rose-300/80 dark:border-rose-800/80 bg-rose-50/20 dark:bg-rose-950/15 hover:border-rose-400';
+                }
+
                 return (
                   <div
                     key={dayNum}
                     onClick={() => setSelectedDateStr(dateStr)}
-                    className={`min-h-[75px] sm:min-h-[95px] p-2 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between overflow-hidden group ${
-                      isSelected
-                        ? 'border-sky-500 ring-2 ring-sky-300 dark:ring-sky-700 bg-sky-50/40 dark:bg-sky-950/40 shadow-xs'
-                        : isToday
-                        ? 'border-sky-300 dark:border-sky-700 bg-sky-50/20 dark:bg-sky-950/20'
-                        : dayExams.length > 0
-                        ? 'border-rose-300/80 dark:border-rose-800/80 bg-rose-50/20 dark:bg-rose-950/15 hover:border-rose-400'
-                        : 'border-slate-100 dark:border-slate-800 hover:border-sky-200 dark:hover:border-sky-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/60'
-                    }`}
+                    style={cellInlineStyle}
+                    className={`min-h-[75px] sm:min-h-[95px] p-2 ${calendarTheme.cellRounding} border transition-all cursor-pointer relative flex flex-col justify-between overflow-hidden group ${cellBorderClass}`}
                   >
                     {/* Day Number Header */}
                     <div className="flex items-center justify-between z-10">
                       <span
-                        className={`text-xs sm:text-sm font-extrabold font-heading px-2 py-0.5 rounded-lg ${
+                        className={`text-xs sm:text-sm font-extrabold font-heading px-2 py-0.5 rounded-lg transition-colors ${
                           isToday
-                            ? 'bg-sky-600 text-white shadow-xs'
-                            : 'text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400'
+                            ? 'shadow-xs'
+                            : 'text-slate-800 dark:text-slate-200'
                         }`}
+                        style={isToday ? {
+                          backgroundColor: calendarTheme.primaryColor,
+                          color: getContrastTextColor(calendarTheme.primaryColor),
+                        } : undefined}
                       >
                         {dayNum}
                       </span>
@@ -382,61 +510,115 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         )}
                         {dayEvents.length > 0 && (
                           <span
-                            className="w-2 h-2 rounded-full bg-blue-500"
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: calendarTheme.secondaryColor }}
                             title={`กิจกรรม ${dayEvents.length} รายการ`}
                           />
                         )}
                       </div>
                     </div>
 
-                    {/* Preview Cards/Pills on day cell */}
-                    <div className="space-y-1 mt-1 overflow-hidden">
-                      {/* Show exam pills first with Red Pin 📍 */}
-                      {dayExams.map((ex) => (
-                        <div
-                          key={ex.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onNavigateToExam) onNavigateToExam();
-                          }}
-                          className="text-[10px] font-bold truncate px-1.5 py-0.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow-2xs flex items-center space-x-1 cursor-pointer transition-colors"
-                          title={`📍 สอบ ${ex.subject} (${ex.startTime} - ${ex.endTime})`}
-                        >
-                          <span className="text-[9px]">📍</span>
-                          <span className="truncate">สอบ {ex.subject}</span>
-                        </div>
-                      ))}
+                    {/* Dynamic Badges according to calendarTheme.badgeStyle */}
+                    {calendarTheme.badgeStyle === 'pill' ? (
+                      <div className="space-y-1 mt-1 overflow-hidden">
+                        {/* Show exam pills first with Red Pin 📍 */}
+                        {dayExams.map((ex) => (
+                          <div
+                            key={ex.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onNavigateToExam) onNavigateToExam();
+                            }}
+                            className="text-[10px] font-bold truncate px-1.5 py-0.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow-2xs flex items-center space-x-1 cursor-pointer transition-colors"
+                            title={`📍 สอบ ${ex.subject} (${ex.startTime} - ${ex.endTime})`}
+                          >
+                            <span className="text-[9px]">📍</span>
+                            <span className="truncate">สอบ {ex.subject}</span>
+                          </div>
+                        ))}
 
-                      {/* Show top homework */}
-                      {dayHomeworks.slice(0, dayExams.length > 0 ? 1 : 2).map((hw) => (
-                        <div
-                          key={hw.id}
-                          className={`text-[10px] font-semibold truncate px-1.5 py-0.5 rounded-md border ${
-                            hw.completed
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                              : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
-                          }`}
-                        >
-                          📚 {hw.subject}
-                        </div>
-                      ))}
+                        {/* Show top homework */}
+                        {dayHomeworks.slice(0, dayExams.length > 0 ? 1 : 2).map((hw) => (
+                          <div
+                            key={hw.id}
+                            className={`text-[10px] font-semibold truncate px-1.5 py-0.5 rounded-md border ${
+                              hw.completed
+                                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                            }`}
+                          >
+                            📚 {hw.subject}
+                          </div>
+                        ))}
 
-                      {/* Show top event if space */}
-                      {dayExams.length === 0 && dayEvents.slice(0, 1).map((evt) => (
-                        <div
-                          key={evt.id}
-                          className="text-[10px] font-semibold truncate px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
-                        >
-                          📌 {evt.title}
-                        </div>
-                      ))}
+                        {/* Show top event if space */}
+                        {dayExams.length === 0 && dayEvents.slice(0, 1).map((evt) => (
+                          <div
+                            key={evt.id}
+                            className="text-[10px] font-semibold truncate px-1.5 py-0.5 rounded-md border"
+                            style={{
+                              backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.1),
+                              color: calendarTheme.primaryColor,
+                              borderColor: hexToRgba(calendarTheme.primaryColor, 0.25),
+                            }}
+                          >
+                            📌 {evt.title}
+                          </div>
+                        ))}
 
-                      {dayExams.length + dayHomeworks.length + dayEvents.length > 3 && (
-                        <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold px-1">
-                          +{dayExams.length + dayHomeworks.length + dayEvents.length - 3} เพิ่มเติม
-                        </div>
-                      )}
-                    </div>
+                        {dayExams.length + dayHomeworks.length + dayEvents.length > 3 && (
+                          <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold px-1">
+                            +{dayExams.length + dayHomeworks.length + dayEvents.length - 3} เพิ่มเติม
+                          </div>
+                        )}
+                      </div>
+                    ) : calendarTheme.badgeStyle === 'dot' ? (
+                      <div className="flex items-center justify-center space-x-1.5 py-2 mt-auto">
+                        {dayExams.map((ex) => (
+                          <span
+                            key={ex.id}
+                            className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse ring-2 ring-rose-200 dark:ring-rose-900"
+                            title={`📍 สอบ ${ex.subject}`}
+                          />
+                        ))}
+                        {dayHomeworks.map((hw) => (
+                          <span
+                            key={hw.id}
+                            className={`w-2 h-2 rounded-full ${hw.completed ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                            title={`📚 ${hw.subject}`}
+                          />
+                        ))}
+                        {dayEvents.map((evt) => (
+                          <span
+                            key={evt.id}
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: calendarTheme.primaryColor }}
+                            title={`📌 ${evt.title}`}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-auto space-y-1">
+                        {dayExams.length > 0 && (
+                          <div className="px-1.5 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-bold truncate flex items-center justify-between">
+                            <span>📍 สอบ</span>
+                            <span>{dayExams.length} วิชา</span>
+                          </div>
+                        )}
+                        {(dayHomeworks.length > 0 || dayEvents.length > 0) && (
+                          <div 
+                            className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold truncate flex items-center justify-between"
+                            style={{
+                              backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.12),
+                              color: calendarTheme.primaryColor,
+                            }}
+                          >
+                            <span>{dayHomeworks.length > 0 ? `📚 ${dayHomeworks.length}` : ''}</span>
+                            <span>{dayEvents.length > 0 ? `📌 ${dayEvents.length}` : ''}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -464,7 +646,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 {selectedDateStr && (
                   <button
                     onClick={() => onAddEventClick(selectedDateStr)}
-                    className="p-2 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer border border-sky-200 dark:border-slate-750"
+                    className="p-2 rounded-xl transition-colors cursor-pointer border"
+                    style={{
+                      color: calendarTheme.primaryColor,
+                      borderColor: hexToRgba(calendarTheme.primaryColor, 0.35),
+                      backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.05),
+                    }}
                     title="เพิ่ม Event สำหรับวันนี้"
                   >
                     <Plus className="w-4 h-4" />
@@ -531,7 +718,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 {/* Homeworks due section */}
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                    <BookOpen 
+                      className="w-3.5 h-3.5" 
+                      style={{ color: calendarTheme.primaryColor }}
+                    />
                     <span>การบ้านที่ต้องส่ง ({selectedHomeworks.length})</span>
                   </h4>
 
@@ -545,10 +735,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         <div
                           key={hw.id}
                           onClick={() => onHomeworkClick(hw)}
-                          className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600 transition-all cursor-pointer group"
+                          className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 rounded-2xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer group"
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-sky-800 dark:text-sky-300 bg-sky-100 dark:bg-sky-950 px-2 py-0.5 rounded-lg">
+                            <span 
+                              className="text-xs font-bold px-2 py-0.5 rounded-lg"
+                              style={{
+                                backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.12),
+                                color: calendarTheme.primaryColor,
+                              }}
+                            >
                               {hw.subject}
                             </span>
                             <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
@@ -572,7 +768,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 {/* Calendar Events section */}
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
                   <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-                    <Tag className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <Tag 
+                      className="w-3.5 h-3.5" 
+                      style={{ color: calendarTheme.secondaryColor }}
+                    />
                     <span>กิจกรรม / Event ({selectedEvents.length})</span>
                   </h4>
 
@@ -585,14 +784,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       {selectedEvents.map((evt) => (
                         <div
                           key={evt.id}
-                          className="p-3.5 rounded-2xl border bg-sky-50/50 dark:bg-slate-800/80 border-sky-200 dark:border-slate-700 text-xs hover:border-sky-300 dark:hover:border-sky-600 transition-all group"
+                          className="p-3.5 rounded-2xl border bg-slate-50/60 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-xs transition-all group"
                         >
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <div className="space-y-1 pr-1">
                               <span className="font-bold text-slate-800 dark:text-slate-100 text-xs block">
                                 📌 {evt.title}
                               </span>
-                              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
+                              <span 
+                                className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                                style={{
+                                  backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.1),
+                                  color: calendarTheme.primaryColor,
+                                  borderColor: hexToRgba(calendarTheme.primaryColor, 0.25),
+                                }}
+                              >
                                 {evt.type}
                               </span>
                             </div>
@@ -605,7 +811,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                     e.stopPropagation();
                                     onEditEvent(evt);
                                   }}
-                                  className="p-1 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+                                  className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
                                   title="แก้ไขกิจกรรม"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
@@ -628,13 +834,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                           {evt.time && (
                             <div className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center space-x-1 mt-1.5">
-                              <Clock className="w-3 h-3 text-sky-600 dark:text-sky-400" />
+                              <Clock 
+                                className="w-3 h-3" 
+                                style={{ color: calendarTheme.primaryColor }}
+                              />
                               <span>เวลา {evt.time} น.</span>
                             </div>
                           )}
                           {evt.location && (
                             <div className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center space-x-1 mt-1">
-                              <MapPin className="w-3 h-3 text-sky-600 dark:text-sky-400" />
+                              <MapPin 
+                                className="w-3 h-3" 
+                                style={{ color: calendarTheme.primaryColor }}
+                              />
                               <span>สถานที่: {evt.location}</span>
                             </div>
                           )}
@@ -655,7 +867,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
               <button
                 onClick={() => onAddEventClick(selectedDateStr || undefined)}
-                className="w-full py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-750 text-sky-700 dark:text-sky-300 font-bold font-heading text-xs rounded-xl border border-sky-200 dark:border-slate-700 transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+                className="w-full py-2.5 font-bold font-heading text-xs rounded-xl border transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+                style={{
+                  color: calendarTheme.primaryColor,
+                  borderColor: hexToRgba(calendarTheme.primaryColor, 0.35),
+                  backgroundColor: hexToRgba(calendarTheme.primaryColor, 0.05),
+                }}
               >
                 <Plus className="w-4 h-4" />
                 <span>+ เพิ่ม Event ในวันที่ {selectedDateStr || ''}</span>
@@ -664,6 +881,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Calendar Theme Customizer Modal */}
+      <CalendarThemeModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        currentTheme={calendarTheme}
+        onSaveTheme={handleSaveTheme}
+      />
     </div>
   );
 };
