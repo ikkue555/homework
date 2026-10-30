@@ -1,6 +1,0 @@
-{
-  "name": "ระบบจัดการการบ้าน (Homework Manager)",
-  "description": "ระบบจัดการการบ้าน ติดตามความคืบหน้า วันกำหนดส่ง งานเดี่ยว/งานกลุ่ม ปฏิทิน 12 เดือน และระบบตารางสอบ (Exam Schedule)",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
