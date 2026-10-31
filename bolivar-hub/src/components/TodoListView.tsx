@@ -289,44 +289,74 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
           </div>
         </div>
 
-        {/* 3 Quick Launch Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4 pt-4 border-t border-white/10">
+        {/* 3 Prominent Quick Action Cards (แอดจากการบ้าน / แอดจากวิชาสอบ / กรอกเอง) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5 pt-4 border-t border-white/15">
+          {/* Card 1: แอดจากการบ้าน */}
           <button
             onClick={() => handleOpenAdd('homework', activeDateTarget || todayStr)}
-            className="flex items-center space-x-2.5 px-3 py-2 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/20 rounded-2xl text-xs font-semibold text-sky-100 transition-all cursor-pointer text-left"
+            className="group relative flex items-center space-x-3.5 p-4 sm:p-4.5 bg-gradient-to-r from-sky-500/25 via-blue-600/20 to-sky-600/30 hover:from-sky-500/40 hover:to-blue-600/40 border-2 border-sky-400/40 hover:border-sky-300 rounded-2xl text-white shadow-lg shadow-sky-950/40 transition-all duration-300 cursor-pointer text-left hover:scale-[1.02] active:scale-[0.98]"
           >
-            <div className="w-7 h-7 rounded-xl bg-sky-500/30 flex items-center justify-center shrink-0">
-              <BookOpen className="w-4 h-4 text-sky-300" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-sky-500/30 group-hover:scale-110 transition-transform">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
             </div>
-            <div className="min-w-0">
-              <p className="font-bold truncate">+ แอดจากการบ้าน ({homeworks.filter(h => !h.completed).length})</p>
-              <p className="text-[10px] text-sky-200/70 truncate">เลือกการบ้านมาจัดตารางส่ง</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1">
+                <p className="text-sm sm:text-base font-black font-heading tracking-tight text-white group-hover:text-sky-200 transition-colors">
+                  + แอดจากการบ้าน
+                </p>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-400/30 text-sky-100 border border-sky-300/40 shrink-0">
+                  {homeworks.filter(h => !h.completed).length} งาน
+                </span>
+              </div>
+              <p className="text-xs text-sky-100/80 mt-0.5 truncate">
+                เลือกการบ้านมาจัดตารางส่ง
+              </p>
             </div>
           </button>
 
+          {/* Card 2: แอดจากวิชาสอบ */}
           <button
             onClick={() => handleOpenAdd('exam', activeDateTarget || todayStr)}
-            className="flex items-center space-x-2.5 px-3 py-2 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/20 rounded-2xl text-xs font-semibold text-rose-100 transition-all cursor-pointer text-left"
+            className="group relative flex items-center space-x-3.5 p-4 sm:p-4.5 bg-gradient-to-r from-rose-500/25 via-red-600/20 to-rose-600/30 hover:from-rose-500/40 hover:to-red-600/40 border-2 border-rose-400/40 hover:border-rose-300 rounded-2xl text-white shadow-lg shadow-rose-950/40 transition-all duration-300 cursor-pointer text-left hover:scale-[1.02] active:scale-[0.98]"
           >
-            <div className="w-7 h-7 rounded-xl bg-rose-500/30 flex items-center justify-center shrink-0">
-              <GraduationCap className="w-4 h-4 text-rose-300" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 group-hover:scale-110 transition-transform">
+              <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
             </div>
-            <div className="min-w-0">
-              <p className="font-bold truncate">+ แอดจากวิชาสอบ ({exams.length})</p>
-              <p className="text-[10px] text-rose-200/70 truncate">วางแผนอ่านและทบทวนสอบ</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1">
+                <p className="text-sm sm:text-base font-black font-heading tracking-tight text-white group-hover:text-rose-200 transition-colors">
+                  + แอดจากวิชาสอบ
+                </p>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-400/30 text-rose-100 border border-rose-300/40 shrink-0">
+                  {exams.length} วิชา
+                </span>
+              </div>
+              <p className="text-xs text-rose-100/80 mt-0.5 truncate">
+                วางแผนอ่านหนังสือ & ติวสอบ
+              </p>
             </div>
           </button>
 
+          {/* Card 3: กรอกเอง (กิจกรรมอื่น) */}
           <button
             onClick={() => handleOpenAdd('custom', activeDateTarget || todayStr)}
-            className="flex items-center space-x-2.5 px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/20 rounded-2xl text-xs font-semibold text-emerald-100 transition-all cursor-pointer text-left"
+            className="group relative flex items-center space-x-3.5 p-4 sm:p-4.5 bg-gradient-to-r from-emerald-500/25 via-teal-600/20 to-emerald-600/30 hover:from-emerald-500/40 hover:to-teal-600/40 border-2 border-emerald-400/40 hover:border-emerald-300 rounded-2xl text-white shadow-lg shadow-emerald-950/40 transition-all duration-300 cursor-pointer text-left hover:scale-[1.02] active:scale-[0.98]"
           >
-            <div className="w-7 h-7 rounded-xl bg-emerald-500/30 flex items-center justify-center shrink-0">
-              <FileText className="w-4 h-4 text-emerald-300" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 group-hover:scale-110 transition-transform">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
             </div>
-            <div className="min-w-0">
-              <p className="font-bold truncate">+ กิจกรรมอื่น (กรอกเอง)</p>
-              <p className="text-[10px] text-emerald-200/70 truncate">ซื้อของ, นัดติว, ธุระส่วนตัว</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1">
+                <p className="text-sm sm:text-base font-black font-heading tracking-tight text-white group-hover:text-emerald-200 transition-colors">
+                  + กรอกเอง (กิจกรรม)
+                </p>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-400/30 text-emerald-100 border border-emerald-300/40 shrink-0">
+                  อิสระ
+                </span>
+              </div>
+              <p className="text-xs text-emerald-100/80 mt-0.5 truncate">
+                ซื้อของ, นัดติว, ธุระส่วนตัว
+              </p>
             </div>
           </button>
         </div>

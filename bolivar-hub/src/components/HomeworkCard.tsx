@@ -242,21 +242,21 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
         }`} 
       />
 
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+      <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
         <div>
           {/* Top Badges & Quick Action Header */}
-          <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 mb-3.5">
             {/* Subject Badge & Tags */}
             <div className="flex flex-wrap items-center gap-1.5 min-w-0">
               {/* Colorful Subject Badge */}
-              <span className={`inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold font-heading px-3 py-1 rounded-xl border shadow-2xs shrink-0 transition-transform group-hover:scale-[1.02] ${theme.badge}`}>
-                <BookOpen className={`w-3.5 h-3.5 ${theme.iconColor} shrink-0`} />
-                <span className="truncate max-w-[140px] sm:max-w-[200px]">{homework.subject}</span>
+              <span className={`inline-flex items-center space-x-1.5 text-xs sm:text-sm font-extrabold font-heading px-3.5 py-1.5 rounded-xl border shadow-xs shrink-0 transition-transform group-hover:scale-[1.02] ${theme.badge}`}>
+                <BookOpen className={`w-4 h-4 ${theme.iconColor} shrink-0`} />
+                <span className="truncate max-w-[160px] sm:max-w-[220px]">{homework.subject}</span>
               </span>
 
               {/* Work Type Badge */}
               <span 
-                className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-lg flex items-center space-x-1 shrink-0 ${
+                className={`text-xs font-bold px-2.5 py-1 rounded-xl flex items-center space-x-1 shrink-0 ${
                   homework.workType === 'กลุ่ม'
                     ? 'bg-purple-100/90 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800 shadow-2xs'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700'
@@ -264,12 +264,12 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
               >
                 {homework.workType === 'กลุ่ม' ? (
                   <>
-                    <Users className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                    <Users className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                     <span>กลุ่ม ({homework.members?.length || 0})</span>
                   </>
                 ) : (
                   <>
-                    <User className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                    <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span>เดี่ยว</span>
                   </>
                 )}
@@ -277,8 +277,8 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
 
               {/* Priority Badge */}
               {homework.priority === 'ด่วนที่สุด' && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-xs shrink-0 animate-pulse flex items-center space-x-0.5">
-                  <span>🔥 ด่วน</span>
+                <span className="text-xs font-extrabold px-2.5 py-1 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-xs shrink-0 animate-pulse flex items-center space-x-0.5">
+                  <span>🔥 ด่วนที่สุด</span>
                 </span>
               )}
             </div>
@@ -287,28 +287,28 @@ export const HomeworkCard: React.FC<HomeworkCardProps> = ({
             <button
               onClick={() => onToggleComplete(homework.id)}
               title={homework.completed ? 'ทำเป็นยังไม่เสร็จ' : 'กดว่าเสร็จสมบูรณ์'}
-              className={`shrink-0 px-3 py-1.5 rounded-xl cursor-pointer flex items-center space-x-1.5 text-xs font-bold font-heading btn-interactive transition-all ${
+              className={`shrink-0 px-3.5 py-2 rounded-xl cursor-pointer flex items-center space-x-1.5 text-xs sm:text-sm font-extrabold font-heading btn-interactive transition-all shadow-xs ${
                 homework.completed
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs hover:from-emerald-700 hover:to-teal-700 active:scale-95'
-                  : 'bg-white/95 dark:bg-slate-800/90 hover:bg-emerald-50 dark:hover:bg-emerald-950/70 text-slate-700 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 shadow-2xs hover:border-emerald-300 dark:hover:border-emerald-700 active:scale-95'
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white hover:brightness-110 active:scale-95'
+                  : 'bg-white/95 dark:bg-slate-800/90 hover:bg-emerald-50 dark:hover:bg-emerald-950/70 text-slate-800 hover:text-emerald-700 dark:text-slate-200 dark:hover:text-emerald-300 border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-600 active:scale-95'
               }`}
             >
-              <CheckCircle2 className={`w-3.5 h-3.5 transition-transform ${homework.completed ? 'text-white animate-check' : 'text-emerald-500 group-hover:scale-110'}`} />
+              <CheckCircle2 className={`w-4 h-4 transition-transform ${homework.completed ? 'text-white animate-check' : 'text-emerald-500 group-hover:scale-110'}`} />
               <span>{homework.completed ? 'เสร็จแล้ว' : 'เสร็จ'}</span>
             </button>
           </div>
 
           {/* Shared By Badge */}
           {homework.sharedBy && (
-            <div className="inline-flex items-center space-x-1.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/70 px-2.5 py-1 rounded-xl border border-indigo-200/80 dark:border-indigo-800 shadow-2xs mb-2.5 font-heading">
-              <Share2 className="w-3 h-3 text-indigo-500 shrink-0" />
+            <div className="inline-flex items-center space-x-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/70 px-3 py-1 rounded-xl border border-indigo-200/80 dark:border-indigo-800 shadow-2xs mb-2.5 font-heading">
+              <Share2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
               <span>แชร์โดย: {homework.sharedBy.displayName || homework.sharedBy.username || homework.sharedBy.email}</span>
             </div>
           )}
 
           {/* Task Title & Description */}
-          <div className="mb-3 space-y-1.5">
-            <h3 className="text-slate-900 dark:text-slate-100 text-sm sm:text-base font-bold font-heading leading-snug group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+          <div className="mb-4 space-y-2">
+            <h3 className="text-slate-900 dark:text-slate-100 text-base sm:text-lg font-black font-heading leading-snug group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
               {homework.title || homework.subject || 'ไม่มีหัวข้องาน'}
             </h3>
             {homework.description && (

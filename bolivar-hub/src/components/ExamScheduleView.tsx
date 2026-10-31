@@ -102,6 +102,9 @@ export const ExamScheduleView: React.FC<ExamScheduleViewProps> = ({
   const filteredExams = useMemo(() => {
     return exams.filter((exam) => {
       // Completed / Pending status filter
+      if (selectedFilter === 'all' && exam.isCompleted) {
+        return false;
+      }
       if (selectedFilter === 'completed' && !exam.isCompleted) {
         return false;
       }

@@ -858,9 +858,19 @@ export default function App() {
     }
   };
 
-  const handleToggleCompleteTodo = async (todo: TodoItem) => {
+  const handleToggleCompleteTodo = async (todo: TodoItem, explicitNextCompleted?: boolean) => {
     if (!userProfile) return;
-    const nextCompleted = !todo.completed;
+    const nextCompleted = typeof explicitNextCompleted === 'boolean' 
+      ? explicitNextCompleted 
+      : !todo.completed;
+
+    // Optimistically update local state for immediate UI feedback
+    setTodos(prev => prev.map(t => t.id === todo.id ? { 
+      ...t, 
+      completed: nextCompleted, 
+      completedAt: nextCompleted ? new Date().toISOString() : undefined 
+    } : t));
+
     try {
       // 1. Toggle todo status in cloud
       await toggleTodoCompleteInCloud(userProfile.uid, todo.id, nextCompleted);
@@ -926,6 +936,7 @@ export default function App() {
 
   const handleClearCompletedTodos = async () => {
     if (!userProfile) return;
+    setTodos(prev => prev.filter(t => !t.completed));
     try {
       await clearCompletedTodosFromCloud(userProfile.uid);
       addToast('ล้างรายการที่เสร็จสิ้นแล้ว 🧹', 'นำรายการที่ทำเสร็จแล้วออกจาก To Do List เรียบร้อย', 'info', { actionTab: 'todo' });
@@ -1419,7 +1430,7 @@ export default function App() {
               onEditTodo={(todo) => handleOpenEditTodo(todo)}
               onToggleComplete={(id, completed) => {
                 const item = todos.find((t) => t.id === id);
-                if (item) handleToggleCompleteTodo({ ...item, completed });
+                if (item) handleToggleCompleteTodo(item, completed);
               }}
               onToggleCompleteTodo={handleToggleCompleteTodo}
               onDeleteTodo={handleDeleteTodo}

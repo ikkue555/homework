@@ -207,25 +207,28 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {/* The 3-Line Hamburger Menu Button (ปุ่มขีด 3 ขีด) */}
+              {/* The 3-Line Hamburger Menu Button (ปุ่มขีด 3 ขีด) with Rotation Animation */}
               <button
                 id="header-hamburger-menu-btn"
                 ref={menuBtnRef}
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label="เมนูหลัก (3 ขีด)"
                 aria-expanded={menuOpen}
-                className={`relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border cursor-pointer btn-interactive transition-all ${
+                className={`relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border cursor-pointer btn-interactive transition-all duration-300 ${
                   menuOpen
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-sm'
+                    ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white border-rose-500 shadow-md shadow-rose-600/30'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border-slate-250/90 dark:border-slate-700 shadow-2xs'
                 }`}
                 title={menuOpen ? 'ปิดเมนู' : 'เปิดเมนู (ปุ่มขีด 3 ขีด)'}
               >
-                {menuOpen ? (
-                  <X className="w-5 h-5 sm:w-5.5 sm:h-5.5 stroke-[2.2]" />
-                ) : (
-                  <Menu className="w-5 h-5 sm:w-5.5 sm:h-5.5 stroke-[2.2]" />
-                )}
+                {/* Smooth Rotating Icon Transition */}
+                <div className={`transition-transform duration-300 ease-out transform ${menuOpen ? 'rotate-180 scale-110' : 'rotate-0 scale-100'}`}>
+                  {menuOpen ? (
+                    <X className="w-5 h-5 sm:w-5.5 sm:h-5.5 stroke-[2.5]" />
+                  ) : (
+                    <Menu className="w-5 h-5 sm:w-5.5 sm:h-5.5 stroke-[2.2]" />
+                  )}
+                </div>
 
                 {/* Combined Alert Badge on Hamburger Button */}
                 {!menuOpen && totalAlertBadge > 0 && (
@@ -235,241 +238,241 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </button>
 
-              {/* Floating Dropdown Drawer (เปิดจากปุ่มขีด 3 ขีด มุมขวาบน) */}
+
+              {/* Floating Speed Dial Styled Dropdown Drawer */}
               {menuOpen && (
                 <div
                   ref={menuRef}
-                  className="absolute right-0 top-12 sm:top-14 w-[310px] sm:w-[350px] max-h-[85vh] overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-3 sm:p-4 space-y-3 z-50 animate-pop no-scrollbar"
+                  className="absolute right-0 top-12 sm:top-14 w-[320px] sm:w-[360px] max-h-[85vh] overflow-y-auto bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 space-y-4 z-50 animate-pop no-scrollbar origin-top-right"
                   style={{ transformOrigin: 'top right' }}
                 >
-                  {/* User Profile Card */}
+                  {/* User Profile Header Card */}
                   {userProfile && (
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-sky-50 to-indigo-50/50 dark:from-slate-800 dark:to-slate-800/80 rounded-2xl border border-sky-100 dark:border-slate-700/80">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs animate-slideUpFade stagger-1">
                       <div className="flex items-center space-x-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-sky-600 to-blue-600 text-white flex items-center justify-center font-extrabold text-sm shrink-0 shadow-xs">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-2xs">
                           {userProfile.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'U'}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                          <p className="text-xs sm:text-sm font-bold font-heading text-slate-800 dark:text-slate-100 truncate">
                             {userProfile.displayName || userProfile.email}
                           </p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-400 truncate">
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-text">
                             {userProfile.email}
                           </p>
                         </div>
                       </div>
                       {userProfile.role === 'admin' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold font-heading bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 shrink-0">
                           <ShieldCheck className="w-3 h-3 mr-1 text-amber-500" /> แอดมิน
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-700 shrink-0 border border-slate-200/60 dark:border-slate-600">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-200/60 dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700">
                           <User className="w-3 h-3 mr-1 text-slate-500" /> สมาชิก
                         </span>
                       )}
                     </div>
                   )}
 
-                  {/* Primary Quick Action: + เพิ่มการบ้านใหม่ */}
-                  <button
-                    id="menu-btn-add-homework"
-                    onClick={() => handleTabClick('add')}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold font-heading shadow-xs cursor-pointer btn-interactive ${
-                      activeTab === 'add'
-                        ? 'bg-sky-700 text-white ring-2 ring-sky-300 dark:ring-sky-600'
-                        : 'bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-xl bg-white/20 flex items-center justify-center">
-                        <Plus className="w-4 h-4 stroke-[2.5]" />
-                      </div>
-                      <span>{siteSettings?.navAddLabel || '+ เพิ่มการบ้านใหม่'}</span>
+                  {/* Group 1: การจัดการงาน (Task Management) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400 font-heading">
+                        การจัดการงาน
+                      </p>
+                      <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 font-heading">
+                        Task Management
+                      </span>
                     </div>
-                    <ChevronRight className="w-4 h-4 opacity-80" />
-                  </button>
 
-                  {/* Category 1: หน้าหลักและมุมมองงาน */}
-                  <div>
-                    <p className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400 px-1 mb-1.5">
-                      เมนูหน้าเว็บ
-                    </p>
-                    <div className="space-y-1">
-                      {/* Tab: Main Homework */}
+                    <div className="space-y-1.5">
+                      {/* + เพิ่มการบ้านใหม่ */}
+                      <button
+                        id="menu-btn-add-homework"
+                        onClick={() => handleTabClick('add')}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold font-heading cursor-pointer btn-interactive animate-slideUpFade stagger-1 transition-all border ${
+                          activeTab === 'add'
+                            ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-400 text-sky-800 dark:text-sky-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-200/80 dark:border-sky-800">
+                            <Plus className="w-4 h-4 stroke-[2.5]" />
+                          </div>
+                          <span>{siteSettings?.navAddLabel || '+ เพิ่มการบ้านใหม่'}</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
+
+                      {/* หน้าหลัก (การบ้าน) */}
                       <button
                         id="menu-tab-main"
                         onClick={() => handleTabClick('main')}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-2 transition-all border ${
                           activeTab === 'main'
-                            ? 'bg-sky-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-400 text-sky-800 dark:text-sky-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
                         }`}
                       >
                         <div className="flex items-center space-x-2.5">
-                          <BookOpen className={`w-4 h-4 ${activeTab === 'main' ? 'text-white' : 'text-sky-600 dark:text-sky-400'}`} />
-                          <span>{siteSettings?.navMainLabel || 'หน้าหลัก (การบ้าน)'}</span>
+                          <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/80 dark:border-blue-800">
+                            <BookOpen className="w-4 h-4" />
+                          </div>
+                          <span className="font-heading">{siteSettings?.navMainLabel || 'หน้าหลัก (การบ้าน)'}</span>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                          activeTab === 'main'
-                            ? 'bg-white/25 text-white'
-                            : 'bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-300'
-                        }`}>
-                          {remainingCount}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800">
+                          {remainingCount} งาน
                         </span>
                       </button>
 
-                      {/* Tab: To Do List */}
+                      {/* สิ่งที่ต้องทำ (To Do List) */}
                       <button
                         id="menu-tab-todo"
                         onClick={() => handleTabClick('todo')}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-3 transition-all border ${
                           activeTab === 'todo'
-                            ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-400 text-indigo-800 dark:text-indigo-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
                         }`}
                       >
                         <div className="flex items-center space-x-2.5">
-                          <ListTodo className={`w-4 h-4 ${activeTab === 'todo' ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
-                          <span>{siteSettings?.navTodoLabel || 'สิ่งที่ต้องทำ (To Do List)'}</span>
+                          <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/80 dark:border-indigo-800">
+                            <ListTodo className="w-4 h-4" />
+                          </div>
+                          <span className="font-heading">{siteSettings?.navTodoLabel || 'สิ่งที่ต้องทำ (To Do List)'}</span>
                         </div>
                         {todoCount !== undefined && todoCount > 0 && (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                            activeTab === 'todo'
-                              ? 'bg-white/25 text-white'
-                              : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
-                          }`}>
-                            {todoCount}
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800">
+                            {todoCount} งาน
                           </span>
                         )}
                       </button>
 
-                      {/* Tab: Exam Schedule */}
-                      <button
-                        id="menu-tab-exam"
-                        onClick={() => handleTabClick('exam')}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
-                          activeTab === 'exam'
-                            ? 'bg-rose-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2.5">
-                          <GraduationCap className={`w-4 h-4 ${activeTab === 'exam' ? 'text-white' : 'text-rose-500'}`} />
-                          <span>{siteSettings?.navExamLabel || 'ตารางสอบ & ขอบเขต'}</span>
-                        </div>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          activeTab === 'exam' ? 'bg-white/20 text-white' : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'
-                        }`}>
-                          สอบ
-                        </span>
-                      </button>
-
-                      {/* Tab: Calendar & Events */}
-                      <button
-                        id="menu-tab-calendar"
-                        onClick={() => handleTabClick('calendar')}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
-                          activeTab === 'calendar'
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2.5">
-                          <Calendar className={`w-4 h-4 ${activeTab === 'calendar' ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} />
-                          <span>{siteSettings?.navCalendarLabel || 'ปฏิทิน & กิจกรรม'}</span>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                      </button>
-
-                      {/* Tab: PR News */}
-                      <button
-                        id="menu-tab-news"
-                        onClick={() => handleTabClick('news')}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
-                          activeTab === 'news'
-                            ? 'bg-sky-700 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2.5">
-                          <Megaphone className={`w-4 h-4 ${activeTab === 'news' ? 'text-white' : 'text-sky-600 dark:text-sky-400'}`} />
-                          <span>{siteSettings?.navNewsLabel || 'ข่าวประชาสัมพันธ์'}</span>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                      </button>
-
-                      {/* Tab: Completed Homework List */}
+                      {/* การบ้านที่ทำเสร็จแล้ว */}
                       <button
                         id="menu-tab-completed"
                         onClick={() => handleTabClick('completed')}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-4 transition-all border ${
                           activeTab === 'completed'
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-400 text-emerald-800 dark:text-emerald-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
                         }`}
                       >
                         <div className="flex items-center space-x-2.5">
-                          <CheckCircle2 className={`w-4 h-4 ${activeTab === 'completed' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
-                          <span>การบ้านที่ทำเสร็จแล้ว</span>
+                          <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/80 dark:border-emerald-800">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </div>
+                          <span className="font-heading">การบ้านที่ทำเสร็จแล้ว</span>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          activeTab === 'completed' ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
-                        }`}>
-                          {completedCount}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+                          {completedCount} งาน
                         </span>
                       </button>
 
-                      {/* Tab: Overdue Homework List */}
+                      {/* การบ้านที่เลยกำหนด */}
                       <button
                         id="menu-tab-overdue"
                         onClick={() => handleTabClick('overdue')}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-5 transition-all border ${
                           activeTab === 'overdue'
-                            ? 'bg-amber-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-400 text-rose-800 dark:text-rose-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
                         }`}
                       >
                         <div className="flex items-center space-x-2.5">
-                          <Clock className={`w-4 h-4 ${activeTab === 'overdue' ? 'text-white' : 'text-amber-500'}`} />
-                          <span>การบ้านที่เลยกำหนด</span>
+                          <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200/80 dark:border-rose-800">
+                            <Clock className="w-4 h-4" />
+                          </div>
+                          <span className="font-heading">การบ้านที่เลยกำหนด</span>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          activeTab === 'overdue' ? 'bg-white/20 text-white' : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300'
-                        }`}>
-                          {overdueCount}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800">
+                          {overdueCount} งาน
                         </span>
                       </button>
-
-                      {/* Tab: Admin Backoffice (if role === admin) */}
-                      {userProfile?.role === 'admin' && (
-                        <button
-                          id="menu-tab-admin"
-                          onClick={() => handleTabClick('admin')}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer btn-interactive ${
-                            activeTab === 'admin'
-                              ? 'bg-slate-900 text-amber-300 ring-1 ring-amber-400 shadow-xs'
-                              : 'bg-slate-800 text-amber-300 hover:bg-slate-750'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2.5">
-                            <Sliders className="w-4 h-4 text-amber-400 icon-hover-spin" />
-                            <span>{siteSettings?.navAdminLabel || 'ระบบหลังบ้าน (แอดมิน)'}</span>
-                          </div>
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-400/20 text-amber-300">
-                            ADMIN
-                          </span>
-                        </button>
-                      )}
                     </div>
                   </div>
 
-                  {/* Category 2: ระบบเชื่อมต่อและเครื่องมือ */}
-                  <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <p className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400 px-1 mb-1.5">
-                      เครื่องมือ & ฟีเจอร์
+                  {/* Group 2: ปฏิทิน ข่าวสาร & สอบ (Schedule & Events) */}
+                  <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400 font-heading">
+                        ตารางสอบ & กิจกรรม
+                      </p>
+                      <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 font-heading">
+                        Schedule
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {/* ตารางสอบ & ขอบเขต */}
+                      <button
+                        id="menu-tab-exam"
+                        onClick={() => handleTabClick('exam')}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-5 transition-all border ${
+                          activeTab === 'exam'
+                            ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-400 text-rose-800 dark:text-rose-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200/80 dark:border-rose-800">
+                            <GraduationCap className="w-4 h-4" />
+                          </div>
+                          <span className="font-heading">{siteSettings?.navExamLabel || 'ตารางสอบ & ขอบเขต'}</span>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800">
+                          ตารางสอบ
+                        </span>
+                      </button>
+
+                      {/* ปฏิทิน & กิจกรรม */}
+                      <button
+                        id="menu-tab-calendar"
+                        onClick={() => handleTabClick('calendar')}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-6 transition-all border ${
+                          activeTab === 'calendar'
+                            ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-400 text-blue-800 dark:text-blue-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-cyan-100 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-200/80 dark:border-cyan-800">
+                            <Calendar className="w-4 h-4" />
+                          </div>
+                          <span className="font-heading">{siteSettings?.navCalendarLabel || 'ปฏิทิน & กิจกรรม'}</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
+
+                      {/* ข่าวประชาสัมพันธ์ */}
+                      <button
+                        id="menu-tab-news"
+                        onClick={() => handleTabClick('news')}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-6 transition-all border ${
+                          activeTab === 'news'
+                            ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-400 text-amber-800 dark:text-amber-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/80 dark:border-amber-800">
+                            <Megaphone className="w-4 h-4" />
+                          </div>
+                          <span className="font-heading">{siteSettings?.navNewsLabel || 'ข่าวประชาสัมพันธ์'}</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Group 3: สังคม & การแจ้งเตือน (Social & Notifications) */}
+                  <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 space-y-2">
+                    <p className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400 px-1 font-heading">
+                      สังคม & การแจ้งเตือน
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {/* Friends & Sharing Button */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* ระบบเพื่อน */}
                       {onOpenFriends && (
                         <button
                           id="menu-btn-friends"
@@ -477,25 +480,27 @@ export const Header: React.FC<HeaderProps> = ({
                             onOpenFriends();
                             setMenuOpen(false);
                           }}
-                          className="flex items-center justify-between px-3 py-2 bg-indigo-50/80 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-2xl text-xs font-bold btn-interactive border border-indigo-100 dark:border-indigo-900/60"
+                          className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl text-xs font-bold btn-interactive border border-slate-200/80 dark:border-slate-800 shadow-2xs animate-slideUpFade stagger-6"
                         >
                           <div className="flex items-center space-x-2">
-                            <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                            <span>ระบบเพื่อน & แชร์</span>
+                            <div className="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/80 dark:border-indigo-800">
+                              <Users className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="font-heading">ระบบเพื่อน</span>
                           </div>
                           {pendingRequestsCount > 0 ? (
-                            <span className="px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[9px] font-black animate-pulse">
+                            <span className="px-1.5 py-0.5 bg-rose-500 text-white rounded-full text-[9px] font-black animate-pulse">
                               +{pendingRequestsCount}
                             </span>
                           ) : friendsCount > 0 ? (
-                            <span className="px-1.5 py-0.2 bg-indigo-200 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200 rounded-full text-[9px] font-bold">
+                            <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 rounded-full text-[9px] font-bold">
                               {friendsCount}
                             </span>
                           ) : null}
                         </button>
                       )}
 
-                      {/* Notifications Button */}
+                      {/* แจ้งเตือน */}
                       {onOpenNotifications && (
                         <button
                           id="menu-btn-notifications"
@@ -503,72 +508,97 @@ export const Header: React.FC<HeaderProps> = ({
                             onOpenNotifications();
                             setMenuOpen(false);
                           }}
-                          className="flex items-center justify-between px-3 py-2 bg-sky-50/80 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-sky-700 dark:text-sky-300 rounded-2xl text-xs font-bold btn-interactive border border-sky-100 dark:border-sky-900/60"
+                          className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl text-xs font-bold btn-interactive border border-slate-200/80 dark:border-slate-800 shadow-2xs animate-slideUpFade stagger-6"
                         >
                           <div className="flex items-center space-x-2">
-                            <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                            <span>การแจ้งเตือน</span>
+                            <div className="w-7 h-7 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-200/80 dark:border-sky-800">
+                              <Bell className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="font-heading">แจ้งเตือน</span>
                           </div>
                           {unreadNotificationsCount > 0 && (
-                            <span className="px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[9px] font-black animate-bounce">
+                            <span className="px-1.5 py-0.5 bg-rose-500 text-white rounded-full text-[9px] font-black animate-bounce">
                               {unreadNotificationsCount}
                             </span>
                           )}
                         </button>
                       )}
-
-                      {/* PR Popup Announcement Button */}
-                      {onOpenPRPopup && siteSettings?.popupEnabled && (
-                        <button
-                          id="menu-btn-pr-popup"
-                          onClick={() => {
-                            onOpenPRPopup();
-                            setMenuOpen(false);
-                          }}
-                          className="flex items-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold btn-interactive border border-slate-200/80 dark:border-slate-700"
-                        >
-                          <Megaphone className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                          <span>ประกาศสำคัญ</span>
-                        </button>
-                      )}
-
-                      {/* Dark/Light Mode Toggle */}
-                      <button
-                        id="menu-btn-toggle-theme"
-                        onClick={onToggleThemeMode}
-                        className="flex items-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-amber-300 rounded-2xl text-xs font-bold btn-interactive border border-slate-200/80 dark:border-slate-700"
-                      >
-                        {themeMode === 'dark' ? (
-                          <>
-                            <Sun className="w-4 h-4 text-amber-400" />
-                            <span>สลับธีมสว่าง</span>
-                          </>
-                        ) : (
-                          <>
-                            <Moon className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                            <span>สลับธีมมืด</span>
-                          </>
-                        )}
-                      </button>
                     </div>
                   </div>
 
-                  {/* Logout Button */}
-                  {onLogout && (
-                    <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                  {/* Group 4: การตั้งค่า & ระบบผู้ดูแล (Settings & Admin) */}
+                  <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 space-y-2">
+                    <p className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-400 px-1 font-heading">
+                      การตั้งค่า & บัญชีผู้ใช้
+                    </p>
+
+                    <div className="space-y-1.5">
+                      {/* ระบบหลังบ้าน (แอดมิน) */}
+                      {userProfile?.role === 'admin' && (
+                        <button
+                          id="menu-tab-admin"
+                          onClick={() => handleTabClick('admin')}
+                          className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-6 transition-all border ${
+                            activeTab === 'admin'
+                              ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-400 text-amber-900 dark:text-amber-100 shadow-2xs'
+                              : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-200/80 dark:border-amber-800">
+                              <Sliders className="w-4 h-4 icon-hover-spin" />
+                            </div>
+                            <span className="font-heading">{siteSettings?.navAdminLabel || 'ระบบหลังบ้าน (แอดมิน)'}</span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                            ADMIN
+                          </span>
+                        </button>
+                      )}
+
+                      {/* สลับธีมมืด/สว่าง */}
                       <button
-                        id="menu-btn-logout"
-                        onClick={() => {
-                          onLogout();
-                          setMenuOpen(false);
-                        }}
-                        className="w-full flex items-center justify-center space-x-2 p-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-bold btn-interactive border border-rose-200 dark:border-rose-900"
+                        id="menu-btn-toggle-theme"
+                        onClick={onToggleThemeMode}
+                        className="w-full flex items-center justify-between p-2.5 bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl text-xs font-bold btn-interactive border border-slate-200/80 dark:border-slate-800 shadow-2xs animate-slideUpFade stagger-6"
                       >
-                        <LogOut className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                        <span>ออกจากระบบ</span>
+                        <div className="flex items-center space-x-2.5">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+                            themeMode === 'dark' 
+                              ? 'bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-300 border-amber-200/80 dark:border-amber-800' 
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                          }`}>
+                            {themeMode === 'dark' ? (
+                              <Sun className="w-4 h-4 text-amber-500" />
+                            ) : (
+                              <Moon className="w-4 h-4 text-slate-700" />
+                            )}
+                          </div>
+                          <span className="font-heading">
+                            {themeMode === 'dark' ? 'เปลี่ยนเป็นธีมสว่าง (Light)' : 'เปลี่ยนเป็นธีมมืด (Dark)'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {themeMode === 'dark' ? 'Dark' : 'Light'}
+                        </span>
                       </button>
+
+                      {/* ปุ่มออกจากระบบ */}
+                      {onLogout && (
+                        <button
+                          id="menu-btn-logout"
+                          onClick={() => {
+                            onLogout();
+                            setMenuOpen(false);
+                          }}
+                          className="w-full flex items-center justify-center space-x-2 p-2.5 bg-rose-50/80 hover:bg-rose-100/80 dark:bg-rose-950/30 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-bold font-heading btn-interactive border border-rose-200/70 dark:border-rose-900/60 shadow-2xs mt-1"
+                        >
+                          <LogOut className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                          <span>ออกจากระบบ</span>
+                        </button>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>

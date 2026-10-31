@@ -119,115 +119,127 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ homeworks, siteSet
 
   return (
     <div className="space-y-3.5 sm:space-y-4">
-      {/* 1. Quick Stats 4-Grid Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        {/* Remaining / Pending Tasks */}
+      {/* 1. Grand Quick Stats 4-Grid Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* 1. Remaining / Pending Tasks */}
         <div 
           onClick={() => onTabSelect('main')}
-          className="bg-gradient-to-b from-sky-50/50 via-white to-white dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-3.5 sm:p-5 border border-sky-100 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700/80 shadow-xs hover:shadow-lg card-interactive cursor-pointer group flex flex-col justify-between"
+          className="relative overflow-hidden bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-white dark:from-sky-950/40 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-4 sm:p-6 border-2 border-sky-200/80 dark:border-sky-800/80 hover:border-sky-400 dark:hover:border-sky-600 shadow-lg shadow-sky-500/5 hover:shadow-xl hover:shadow-sky-500/15 card-interactive cursor-pointer group flex flex-col justify-between transition-all duration-300"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate font-heading">
+          {/* Subtle background glow */}
+          <div className="absolute -right-6 -top-6 w-28 h-28 bg-sky-400/20 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-xs sm:text-sm font-extrabold text-sky-800 dark:text-sky-300 uppercase tracking-wider truncate font-heading">
               {siteSettings?.statPendingLabel || 'การบ้านคงเหลือ'}
             </span>
-            <div className="w-8 h-8 rounded-2xl bg-sky-100/80 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 border border-sky-200/60 dark:border-sky-800">
-              <Clock className="w-4 h-4" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 shadow-md shadow-sky-500/30">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
             </div>
           </div>
           
-          <div className="mt-3.5 flex items-baseline justify-between">
-            <div className="flex items-baseline space-x-1.5">
-              <span className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-800 dark:text-slate-100 tracking-tight">
+          <div className="mt-4 sm:mt-5 flex items-baseline justify-between relative z-10">
+            <div className="flex items-baseline space-x-2">
+              <span className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white tracking-tight">
                 {remaining.length}
               </span>
-              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">งาน</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-heading">งาน</span>
             </div>
-            <span className="text-xs text-sky-600 dark:text-sky-400 font-bold group-hover:translate-x-1 transition-transform flex items-center">
-              <span className="hidden sm:inline mr-0.5 font-heading">ดูรายการ</span>
+            <span className="text-xs sm:text-sm text-sky-600 dark:text-sky-400 font-extrabold font-heading group-hover:translate-x-1 transition-transform flex items-center gap-1 bg-sky-100/80 dark:bg-sky-950/80 px-2.5 py-1 rounded-xl border border-sky-200 dark:border-sky-800">
+              <span>ดูรายการ</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>
 
-        {/* Completed Tasks */}
+        {/* 2. Completed Tasks */}
         <div 
           onClick={() => onTabSelect('completed')}
-          className="bg-gradient-to-b from-emerald-50/50 via-white to-white dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-3.5 sm:p-5 border border-emerald-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700/80 shadow-xs hover:shadow-lg card-interactive cursor-pointer group flex flex-col justify-between"
+          className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-4 sm:p-6 border-2 border-emerald-200/80 dark:border-emerald-800/80 hover:border-emerald-400 dark:hover:border-emerald-600 shadow-lg shadow-emerald-500/5 hover:shadow-xl hover:shadow-emerald-500/15 card-interactive cursor-pointer group flex flex-col justify-between transition-all duration-300"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate font-heading">
+          {/* Subtle background glow */}
+          <div className="absolute -right-6 -top-6 w-28 h-28 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-xs sm:text-sm font-extrabold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider truncate font-heading">
               {siteSettings?.navCompletedLabel || siteSettings?.statCompletedLabel || 'เสร็จสมบูรณ์'}
             </span>
-            <div className="w-8 h-8 rounded-2xl bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 border border-emerald-200/60 dark:border-emerald-800">
-              <CheckCircle2 className="w-4 h-4" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 shadow-md shadow-emerald-500/30">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
             </div>
           </div>
           
-          <div className="mt-3.5 flex items-baseline justify-between">
-            <div className="flex items-baseline space-x-1.5">
-              <span className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-800 dark:text-slate-100 tracking-tight">
+          <div className="mt-4 sm:mt-5 flex items-baseline justify-between relative z-10">
+            <div className="flex items-baseline space-x-2">
+              <span className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white tracking-tight">
                 {completedList.length}
               </span>
-              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">งาน</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-heading">งาน</span>
             </div>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold group-hover:translate-x-1 transition-transform flex items-center">
-              <span className="hidden sm:inline mr-0.5 font-heading">ดูรายการ</span>
+            <span className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-extrabold font-heading group-hover:translate-x-1 transition-transform flex items-center gap-1 bg-emerald-100/80 dark:bg-emerald-950/80 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800">
+              <span>ดูรายการ</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>
 
-        {/* Overdue Tasks */}
+        {/* 3. Overdue Tasks */}
         <div 
           onClick={() => onTabSelect('overdue')}
-          className="bg-gradient-to-b from-rose-50/50 via-white to-white dark:from-rose-950/20 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-3.5 sm:p-5 border border-rose-100 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700/80 shadow-xs hover:shadow-lg card-interactive cursor-pointer group flex flex-col justify-between"
+          className="relative overflow-hidden bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-white dark:from-rose-950/40 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-4 sm:p-6 border-2 border-rose-200/80 dark:border-rose-800/80 hover:border-rose-400 dark:hover:border-rose-600 shadow-lg shadow-rose-500/5 hover:shadow-xl hover:shadow-rose-500/15 card-interactive cursor-pointer group flex flex-col justify-between transition-all duration-300"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate font-heading">
+          {/* Subtle background glow */}
+          <div className="absolute -right-6 -top-6 w-28 h-28 bg-rose-400/20 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-xs sm:text-sm font-extrabold text-rose-800 dark:text-rose-300 uppercase tracking-wider truncate font-heading">
               {siteSettings?.navOverdueLabel || siteSettings?.statOverdueLabel || 'เลยกำหนดส่ง'}
             </span>
-            <div className="w-8 h-8 rounded-2xl bg-rose-100/80 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 border border-rose-200/60 dark:border-rose-800">
-              <AlertCircle className="w-4 h-4" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 shadow-md shadow-rose-500/30">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
             </div>
           </div>
           
-          <div className="mt-3.5 flex items-baseline justify-between">
-            <div className="flex items-baseline space-x-1.5">
-              <span className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-800 dark:text-slate-100 tracking-tight">
+          <div className="mt-4 sm:mt-5 flex items-baseline justify-between relative z-10">
+            <div className="flex items-baseline space-x-2">
+              <span className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white tracking-tight">
                 {overdue.length}
               </span>
-              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">งาน</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-heading">งาน</span>
             </div>
-            <span className="text-xs text-rose-600 dark:text-rose-400 font-bold group-hover:translate-x-1 transition-transform flex items-center">
-              <span className="hidden sm:inline mr-0.5 font-heading">ดูรายการ</span>
+            <span className="text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-extrabold font-heading group-hover:translate-x-1 transition-transform flex items-center gap-1 bg-rose-100/80 dark:bg-rose-950/80 px-2.5 py-1 rounded-xl border border-rose-200 dark:border-rose-800">
+              <span>ดูรายการ</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>
 
-        {/* Total Homeworks */}
+        {/* 4. Total Homeworks */}
         <div 
           onClick={() => onTabSelect('main')}
-          className="bg-gradient-to-b from-indigo-50/50 via-white to-white dark:from-indigo-950/20 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-3.5 sm:p-5 border border-indigo-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700/80 shadow-xs hover:shadow-lg card-interactive cursor-pointer group flex flex-col justify-between"
+          className="relative overflow-hidden bg-gradient-to-br from-indigo-500/10 via-indigo-500/5 to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 rounded-3xl p-4 sm:p-6 border-2 border-indigo-200/80 dark:border-indigo-800/80 hover:border-indigo-400 dark:hover:border-indigo-600 shadow-lg shadow-indigo-500/5 hover:shadow-xl hover:shadow-indigo-500/15 card-interactive cursor-pointer group flex flex-col justify-between transition-all duration-300"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate font-heading">
+          {/* Subtle background glow */}
+          <div className="absolute -right-6 -top-6 w-28 h-28 bg-indigo-400/20 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-xs sm:text-sm font-extrabold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider truncate font-heading">
               {siteSettings?.statTotalLabel || 'การบ้านทั้งหมด'}
             </span>
-            <div className="w-8 h-8 rounded-2xl bg-indigo-100/80 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 border border-indigo-200/60 dark:border-indigo-800">
-              <span className="font-heading font-black text-xs">ALL</span>
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0 shadow-md shadow-indigo-500/30">
+              <span className="font-heading font-black text-sm">ALL</span>
             </div>
           </div>
           
-          <div className="mt-3.5 flex items-baseline justify-between">
-            <div className="flex items-baseline space-x-1.5">
-              <span className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-800 dark:text-slate-100 tracking-tight">
+          <div className="mt-4 sm:mt-5 flex items-baseline justify-between relative z-10">
+            <div className="flex items-baseline space-x-2">
+              <span className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white tracking-tight">
                 {total}
               </span>
-              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">งาน</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 font-heading">งาน</span>
             </div>
-            <span className="text-xs text-indigo-600 dark:text-indigo-400 font-bold group-hover:translate-x-1 transition-transform flex items-center">
-              <span className="hidden sm:inline mr-0.5 font-heading">ดูทั้งหมด</span>
+            <span className="text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 font-extrabold font-heading group-hover:translate-x-1 transition-transform flex items-center gap-1 bg-indigo-100/80 dark:bg-indigo-950/80 px-2.5 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800">
+              <span>ดูทั้งหมด</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
