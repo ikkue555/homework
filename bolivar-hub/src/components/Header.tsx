@@ -19,7 +19,9 @@ import {
   ChevronRight,
   CheckCircle2,
   Clock,
-  ListTodo
+  ListTodo,
+  Flame,
+  Compass
 } from 'lucide-react';
 import { ActiveTab, UserProfile, SiteSettings, ThemeMode } from '../types';
 
@@ -347,6 +349,30 @@ export const Header: React.FC<HeaderProps> = ({
                             {todoCount} งาน
                           </span>
                         )}
+                      </button>
+
+                      {/* โหมดโฟกัส (Focus Mode - Deep Work) */}
+                      <button
+                        id="menu-tab-focus"
+                        onClick={() => handleTabClick('focus')}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl text-xs font-bold cursor-pointer btn-interactive animate-slideUpFade stagger-3 transition-all border ${
+                          activeTab === 'focus'
+                            ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-400 text-amber-800 dark:text-amber-200 shadow-2xs'
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-800 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950 dark:to-orange-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/80 dark:border-amber-800">
+                            <Flame className="w-4 h-4 animate-pulse text-amber-500" />
+                          </div>
+                          <div className="text-left">
+                            <span className="font-heading block">โหมดโฟกัส (Focus Mode)</span>
+                            <span className="text-[9px] text-slate-400 font-normal">เครื่องบิน • รถยนต์ • จับเวลา</span>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-2xs">
+                          NEW
+                        </span>
                       </button>
 
                       {/* การบ้านที่ทำเสร็จแล้ว */}

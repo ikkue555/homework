@@ -147,7 +147,61 @@ export interface TodoItem {
   };
 }
 
-export type ActiveTab = 'main' | 'completed' | 'overdue' | 'add' | 'calendar' | 'exam' | 'news' | 'admin' | 'todo';
+export type ActiveTab = 'main' | 'completed' | 'overdue' | 'add' | 'calendar' | 'exam' | 'news' | 'admin' | 'todo' | 'focus';
+
+export type FocusModeType = 'car' | 'standard';
+
+export interface AirportData {
+  code: string;       // IATA e.g. 'BKK'
+  name: string;       // Name e.g. 'สนามบินสุวรรณภูมิ (Suvarnabhumi)'
+  city: string;       // City e.g. 'กรุงเทพฯ'
+  country: string;    // Country e.g. 'ไทย'
+  lat: number;        // Latitude
+  lng: number;        // Longitude
+}
+
+export interface FlightRoutePreset {
+  id: string;
+  flightNumber: string;
+  airline: string;
+  originCode: string;
+  destCode: string;
+  realDurationMinutes: number; // e.g. 375 mins (6h 15m)
+  description: string;
+}
+
+export interface ThaiProvinceData {
+  id: string;
+  name: string;
+  region: 'central' | 'north' | 'northeast' | 'south' | 'east' | 'west';
+  lat: number;
+  lng: number;
+  highlights?: string;
+}
+
+export interface ScenicRoadTripPreset {
+  id: string;
+  name: string;
+  originId: string;
+  destId: string;
+  highwayNumber: string;
+  realDriveHours: number;
+  realDistanceKm: number;
+  scenicDescription: string;
+}
+
+export interface FocusSessionLog {
+  id: string;
+  mode: FocusModeType;
+  taskTitle: string;
+  durationMinutes: number;
+  completedAt: string;
+  origin?: string;
+  destination?: string;
+  flightOrRouteNumber?: string;
+  linkedTaskId?: string;
+  linkedTaskType?: 'todo' | 'homework' | 'exam' | 'custom';
+}
 
 export interface PRNewsItem {
   id: string;

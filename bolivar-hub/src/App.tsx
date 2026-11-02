@@ -72,6 +72,7 @@ import { ExamScheduleView } from './components/ExamScheduleView';
 import { ExamModal } from './components/ExamModal';
 import { TodoListView } from './components/TodoListView';
 import { AddTodoModal } from './components/AddTodoModal';
+import { FocusView } from './components/FocusView';
 import { Footer } from './components/Footer';
 import { ScrollInteractiveHelper } from './components/ScrollInteractiveHelper';
 import { ToastContainer } from './components/ToastContainer';
@@ -1454,6 +1455,19 @@ export default function App() {
               onNavigateToCalendar={() => {
                 setActiveTab('calendar');
               }}
+            />
+          </div>
+        )}
+
+        {/* Tab: Focus Mode (โหมดโฟกัส) */}
+        {activeTab === 'focus' && (
+          <div className="animate-fadeIn">
+            <FocusView
+              todos={todos}
+              homeworks={homeworks}
+              exams={exams}
+              onToggleCompleteTodo={handleToggleCompleteTodo}
+              onToggleCompleteHomework={handleToggleComplete}
             />
           </div>
         )}
